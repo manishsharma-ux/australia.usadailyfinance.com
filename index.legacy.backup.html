@@ -1,0 +1,670 @@
+<!-- Conditional State Logic--><!-- Conditional Industry --><!DOCTYPE html><html lang="en"><head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="dns-prefetch" href="//fonts.googleapis.com">
+        <link rel="dns-prefetch" href="//maxcdn.bootstrapcdn.com">
+        <link rel="dns-prefetch" href="//maps.googleapis.com">
+        <link rel="dns-prefetch" href="//code.jquery.com">
+                
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <title>Commercial Solar | Apply | Solar Rebates</title>    
+        <!-- Favicon-->
+        <link rel="icon" type="image/x-icon" href="images/solar-rebates-favicon.png">
+        <!-- Fontawesome -->
+        <link href="css/font-awesome.min.css?v=20260910b" rel="stylesheet" type="text/css">
+        <!-- Google fonts-->
+        <style type="text/css">@font-face {font-family:'Poppins';font-style:normal;font-weight:300;src:url(fonts/normal_5.woff2);unicode-range:U+0900-097F,U+1CD0-1CF9,U+200C-200D,U+20A8,U+20B9,U+20F0,U+25CC,U+A830-A839,U+A8E0-A8FF,U+11B00-11B09;font-display:swap;}@font-face {font-family:'Poppins';font-style:normal;font-weight:300;src:url(fonts/normal.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:'Poppins';font-style:normal;font-weight:300;src:url(fonts/normal_3.woff2);unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:'Poppins';font-style:normal;font-weight:400;src:url(fonts/normal_2.woff2);unicode-range:U+0900-097F,U+1CD0-1CF9,U+200C-200D,U+20A8,U+20B9,U+20F0,U+25CC,U+A830-A839,U+A8E0-A8FF,U+11B00-11B09;font-display:swap;}@font-face {font-family:'Poppins';font-style:normal;font-weight:400;src:url(fonts/normal_1.woff2);unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:'Poppins';font-style:normal;font-weight:400;src:url(fonts/normal_4.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:'Poppins';font-style:normal;font-weight:500;src:url(fonts/normal_6.woff2);unicode-range:U+0900-097F,U+1CD0-1CF9,U+200C-200D,U+20A8,U+20B9,U+20F0,U+25CC,U+A830-A839,U+A8E0-A8FF,U+11B00-11B09;font-display:swap;}@font-face {font-family:'Poppins';font-style:normal;font-weight:500;src:url(fonts/normal_7.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}@font-face {font-family:'Poppins';font-style:normal;font-weight:500;src:url(fonts/normal_8.woff2);unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:'Poppins';font-style:normal;font-weight:700;src:url(fonts/normal_10.woff2);unicode-range:U+0900-097F,U+1CD0-1CF9,U+200C-200D,U+20A8,U+20B9,U+20F0,U+25CC,U+A830-A839,U+A8E0-A8FF,U+11B00-11B09;font-display:swap;}@font-face {font-family:'Poppins';font-style:normal;font-weight:700;src:url(fonts/normal_9.woff2);unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:'Poppins';font-style:normal;font-weight:700;src:url(fonts/normal_11.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}
+        input#Street-field {
+    background-image: none !important;
+}
+        </style>
+        <!-- Bootstrap-->
+        <link rel="stylesheet" href="css/bootstrap.min.css?v=20260910b" crossorigin="anonymous">
+        <!-- Core theme CSS-->
+        <link href="css/jquery-ui.css?v=20260910b" rel="stylesheet" type="text/css">
+        <link href="css/style.css?v=20260910b" rel="stylesheet">
+
+        <!-- Form self-check. Shows a panel only if the form is broken (or with ?debug=1).
+             Delete this tag for production. -->
+        <script src="js/diagnostics.js?v=20260910b"></script>    
+      
+</head>
+<body>
+
+    
+    <!-- Nav Start -->    
+    <nav class="navbar static-top" style="background-color:#026475">
+        <div class="container">
+            <img class="float-left" src="images/solar-rebates-logo-white.png" alt="Solar Rebates Logo">
+            <div class="phone_comodo" style="display: -webkit-box;display: -ms-flexbox; display: flex; justify-content: space-between;align-items: center;">
+                <img class="float-right" src="images/solar-rebates-secure-white.png" alt="Solar Rebates Secure SSL" style="max-width:150px;">
+            </div>
+        </div>
+    </nav>
+    <!-- Nav End -->     
+
+    <!-- Heading -->        
+    <section style="padding-top:50px;background: #dff0f3;">
+        <div class="container">
+            <div class="row d-flex justify-content-center">
+                <div class="col-md-9">
+                                        
+                                        <!-- DECOY: Generic headline for competitors/direct visitors -->
+                    <p><span class="preheader" style="letter-spacing:3px;background:#ffffff;border-radius:5px;">RESIDENTIAL SOLAR ENQUIRY</span></p>
+                    <h1 class="text-center headline">Find Out If Your Home Qualifies For Solar Rebates</h1>
+                                    </div>
+            </div>
+        </div>
+    </section>
+    <!-- Heading End-->  
+    <!-- Form Start -->
+
+    <section class="questions" style="padding-bottom:100px; background: #dff0f3;">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="progress">
+                        <div id="progress-bar" class="progress-bar bg-primary" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <form action="process.php" method="post" novalidate="">
+                        <!-- Hidden field to submit through zapier webhook -->
+                        <input type="hidden" id="utm_source" name="utm_source" value="">
+                        <input type="hidden" id="utm_medium" name="utm_medium" value="">
+                        <input type="hidden" id="utm_campaign" name="utm_campaign" value="">
+                        <input type="hidden" id="utm_content" name="utm_content" value="">
+                        <input type="hidden" id="utm_term" name="utm_term" value="">
+                        <input type="hidden" id="ip_address" name="ip_address" value="4.196.89.67">
+                        <input type="hidden" id="utm_campaign_id" name="utm_campaign_id" value="">
+                        <input type="hidden" id="utm_ad_set_id" name="utm_ad_set_id" value="">
+                        <input type="hidden" id="utm_ad_id" name="utm_ad_id" value="">
+                        <input type="hidden" id="from_url" name="from_url" value="http://solarrebates.com.au/commercial/">
+                        <input type="hidden" id="user_agent" name="user_agent" value="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 GTmetrix">
+                        <input type="hidden" id="event_id" name="event_id" value="">
+                        <input type="hidden" id="clid" name="clid" value="">
+
+                            <!-- ============================================================
+                                 PROPERTY TYPE - HIDDEN / LOCKED TO RESIDENTIAL
+                                 The "For My Business" funnel has been removed. This block is kept
+                                 in the DOM (hidden, pre-selected) on purpose:
+                                   1. customer_type=Residential still reaches Zapier / Google Sheet
+                                   2. calculateProgress() in custom.js walks the chain from here
+                                 It never receives .active, so CSS keeps it invisible.
+                                 ============================================================ -->
+                            <div id="CustomerType" class="question" data-type="radio" style="display:none !important;" aria-hidden="true">
+                                <label class="question-title has_icon" data-title="Please confirm the <strong>type of property</strong>? *">Please confirm the <strong>type of property</strong>? *</label>
+                                <div class="answers-container">
+                                    <ul>
+                                        <li>
+                                            <input type="radio" name="CustomerType" data-next="#Homeowner" data-skips="0" id="question-CustomerType-answer-b" value="Residential" checked="checked">
+                                            <label for="question-CustomerType-answer-b">For My Home</label>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                                                    <div id="Homeowner" class="question active" data-type="radio">
+                                <label class="question-title  has_icon" data-title="Do you <strong>own your home?</strong> *">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    Do you <strong>own your home?</strong> *                                </label>
+                                <p>Please select your best option.</p>
+                                
+                                <div class="answers-container ">
+                                                                            <ul>
+                                                                                            <li>
+                                                    <input type="radio" name="Homeowner" data-next="#ProductType" data-skips="0" id="question-Homeowner-answer-a" value="Own">
+                                                    <label for="question-Homeowner-answer-a"><img src="images/solar-australia-icon-own.png">Yes, I Do</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="Homeowner" data-next="#ProductType" data-skips="0" id="question-Homeowner-answer-b" value="Rent">
+                                                    <label for="question-Homeowner-answer-b"><img src="images/solar-australia-icon-rent.png">No, I Rent</label>
+                                                </li>
+                                                                                    </ul>
+                                    
+                                </div>
+
+                            </div>
+                                                    <div id="ProductType" class="question " data-type="radio">
+                                <label class="question-title  has_icon" data-title="What <strong>type of installation</strong> are you interested in? *">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    What <strong>type of installation</strong> are you interested in? *                                </label>
+                                <p>Please select your best option.</p>
+                                
+                                <div class="answers-container ">
+                                                                            <ul>
+                                                                                            <li>
+                                                    <input type="radio" name="ProductType" data-next="#ExistingSolar" data-skips="0" id="question-ProductType-answer-a" value="Solar Only">
+                                                    <label for="question-ProductType-answer-a"><img src="images/solar-australia-icon-solar.png">Solar Only</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="ProductType" data-next="#ExistingSolar" data-skips="0" id="question-ProductType-answer-b" value="Solar &amp; Battery">
+                                                    <label for="question-ProductType-answer-b"><img src="images/solar-australia-icon-solar-and-battery.png">Solar &amp; Battery</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="ProductType" data-next="#ExistingSolar" data-skips="0" id="question-ProductType-answer-c" value="Battery Only">
+                                                    <label for="question-ProductType-answer-c"><img src="images/solar-australia-icon-battery.png">Battery Only</label>
+                                                </li>
+                                                                                    </ul>
+                                    
+                                </div>
+
+                            </div>
+                                                    <div id="ExistingSolar" class="question " data-type="radio">
+                                <label class="question-title  has_icon" data-title="Do you <strong>have solar panels</strong> at the property? *">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    Do you <strong>have solar panels</strong> at the property? *                                </label>
+                                <p>Please select your best option.</p>
+                                
+                                <div class="answers-container ">
+                                                                            <ul>
+                                                                                            <li>
+                                                    <input type="radio" name="ExistingSolar" data-next="#ExistingSolarAge" data-skips="0" id="question-ExistingSolar-answer-a" value="Yes">
+                                                    <label for="question-ExistingSolar-answer-a"><img src="images/solar-australia-icon-yes.png">Yes</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="ExistingSolar" data-next="#BillSize" data-skips="0" id="question-ExistingSolar-answer-b" value="No">
+                                                    <label for="question-ExistingSolar-answer-b"><img src="images/solar-australia-icon-no.png">No</label>
+                                                </li>
+                                                                                    </ul>
+                                    
+                                </div>
+
+                            </div>
+                                                    <div id="ExistingSolarAge" class="question " data-type="radio">
+                                <label class="question-title  has_icon" data-title="How old is your <strong>existing solar system?</strong> *">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    How old is your <strong>existing solar system?</strong> *                                </label>
+                                <p>Your best guess is ok.</p>
+                                
+                                <div class="answers-container ">
+                                                                            <ul>
+                                                                                            <li>
+                                                    <input type="radio" name="ExistingSolarAge" data-next="#RoofType" data-skips="0" id="question-ExistingSolarAge-answer-a" value="More Than 5 Years">
+                                                    <label for="question-ExistingSolarAge-answer-a"><img src="images/solar-australia-icon-more-than-5.png">More Than 5 Years</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="ExistingSolarAge" data-next="#RoofType" data-skips="0" id="question-ExistingSolarAge-answer-b" value="Less Than 5 Years">
+                                                    <label for="question-ExistingSolarAge-answer-b"><img src="images/solar-australia-icon-less-than-5.png">Less Than 5 Years</label>
+                                                </li>
+                                                                                    </ul>
+                                    
+                                </div>
+
+                            </div>
+                                                    <div id="RoofType" class="question " data-type="radio">
+                                <label class="question-title  has_icon" data-title="What <strong>type of roof</strong> do you have? *">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    What <strong>type of roof</strong> do you have? *                                </label>
+                                <p>Please select your best option.</p>
+                                
+                                <div class="answers-container ">
+                                                                            <ul>
+                                                                                            <li>
+                                                    <input type="radio" name="RoofType" data-next="#HomeAge" data-skips="0" id="question-RoofType-answer-a" value="Tin">
+                                                    <label for="question-RoofType-answer-a"><img src="images/solar-australia-icon-tin.png">Tin</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="RoofType" data-next="#HomeAge" data-skips="0" id="question-RoofType-answer-b" value="Tile">
+                                                    <label for="question-RoofType-answer-b"><img src="images/solar-australia-icon-tile.png">Tile</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="RoofType" data-next="#HomeAge" data-skips="0" id="question-RoofType-answer-c" value="Other">
+                                                    <label for="question-RoofType-answer-c"><img src="images/solar-australia-icon-unsure.png">Other</label>
+                                                </li>
+                                                                                    </ul>
+                                    
+                                </div>
+
+                            </div>
+                                                    <div id="HomeAge" class="question " data-type="radio">
+                                <label class="question-title  has_icon" data-title="What's the <strong>age of your home?</strong> *">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    What's the <strong>age of your home?</strong> *                                </label>
+                                <p>Your best guess is ok.</p>
+                                
+                                <div class="answers-container ">
+                                                                            <ul>
+                                                                                            <li>
+                                                    <input type="radio" name="HomeAge" data-next="#ShadingIssues" data-skips="0" id="question-HomeAge-answer-a" value="0 - 10 Years">
+                                                    <label for="question-HomeAge-answer-a"><img src="images/solar-australia-icon-0-10.png">0 - 10 Years</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="HomeAge" data-next="#ShadingIssues" data-skips="0" id="question-HomeAge-answer-b" value="10 - 20 Years">
+                                                    <label for="question-HomeAge-answer-b"><img src="images/solar-australia-icon-age-10-20.png">10 - 20 Years</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="HomeAge" data-next="#ShadingIssues" data-skips="0" id="question-HomeAge-answer-c" value="20 + Years">
+                                                    <label for="question-HomeAge-answer-c"><img src="images/solar-australia-icon-age-20%2B.png">20 + Years</label>
+                                                </li>
+                                                                                    </ul>
+                                    
+                                </div>
+
+                            </div>
+                                                    <div id="ShadingIssues" class="question " data-type="radio">
+                                <label class="question-title  has_icon" data-title="Do you have any <strong>roof shading issues?</strong> *">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    Do you have any <strong>roof shading issues?</strong> *                                </label>
+                                <p>Your best guess is ok.</p>
+                                
+                                <div class="answers-container ">
+                                                                            <ul>
+                                                                                            <li>
+                                                    <input type="radio" name="ShadingIssues" data-next="#BillSize" data-skips="0" id="question-ShadingIssues-answer-a" value="No Shading Issues">
+                                                    <label for="question-ShadingIssues-answer-a"><img src="images/solar-australia-icon-noshade.png">No Issues</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="ShadingIssues" data-next="#BillSize" data-skips="0" id="question-ShadingIssues-answer-b" value="Minor Shading Issues">
+                                                    <label for="question-ShadingIssues-answer-b"><img src="images/solar-australia-icon-minor-shade.png">Minor Shade</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="ShadingIssues" data-next="#BillSize" data-skips="0" id="question-ShadingIssues-answer-c" value="Major Shading Issues">
+                                                    <label for="question-ShadingIssues-answer-c"><img src="images/solar-australia-icon-major-shade.png">Major Shade</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="ShadingIssues" data-next="#BillSize" data-skips="0" id="question-ShadingIssues-answer-d" value="I'm Not Sure">
+                                                    <label for="question-ShadingIssues-answer-d"><img src="images/solar-australia-icon-unsure.png">Not Sure</label>
+                                                </li>
+                                                                                    </ul>
+                                    
+                                </div>
+
+                            </div>
+                                                    <div id="BillSize" class="question " data-type="radio">
+                                <label class="question-title  has_icon" data-title="How high is your <strong>quarterly electricity bill?</strong> *">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    How high is your <strong>quarterly electricity bill?</strong> *                                </label>
+                                <p>Please select your best option.</p>
+                                
+                                <div class="answers-container ">
+                                                                            <ul>
+                                                                                            <li>
+                                                    <input type="radio" name="BillSize" data-next="#Street, #City, #Postcode" data-skips="0" id="question-BillSize-answer-a" value="$300 - $600">
+                                                    <label for="question-BillSize-answer-a"><img src="images/solar-australia-icon-bill01.png">$300 - $600</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="BillSize" data-next="#Street, #City, #Postcode" data-skips="0" id="question-BillSize-answer-b" value="$600 - $900">
+                                                    <label for="question-BillSize-answer-b"><img src="images/solar-australia-icon-bill02.png">$600 - $900</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="BillSize" data-next="#Street, #City, #Postcode" data-skips="0" id="question-BillSize-answer-c" value="$900 - $1,200">
+                                                    <label for="question-BillSize-answer-c"><img src="images/solar-australia-icon-bill03.png">$900 - $1,200</label>
+                                                </li>
+                                                                                            <li>
+                                                    <input type="radio" name="BillSize" data-next="#Street, #City, #Postcode" data-skips="0" id="question-BillSize-answer-d" value="$1,200 +">
+                                                    <label for="question-BillSize-answer-d"><img src="images/solar-australia-icon-bill04.png">$1,200 +</label>
+                                                </li>
+                                                                                    </ul>
+                                    
+                                </div>
+
+                            </div>
+                                                    <div id="Street" class="question " data-type="text" data-next="#FirstName, #LastName">
+                                <label class="question-title " data-title="What's the <strong>address of your property?</strong> *">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    What's the <strong>address of your property?</strong> *                                </label>
+                                <p>Start typing to pick your address, or type it in full.</p>
+                                
+                                <div class="answers-container ">
+                                                                           <input
+  type="text"
+  name="Street"
+  placeholder="Enter your full street address"
+  required
+  id="Street-field"
+  autocomplete="off"
+>
+                                        <br>
+                                                                                <div style="display: none;" class="error-holder"></div>
+
+                                        <!-- <div class="answer-confirm" style="display: none;">
+                                            <button type="button" class="btn btn-primary answer_ok">OK <i class="fa fa-check"></i></button>
+                                            <span>press <strong>Enter ↵</strong></span>
+                                        </div> -->
+                                    
+                                </div>
+
+                            </div>
+                        <div class="ch_groups">                            <div id="City" class="question " data-type="text" data-next="#FirstName, #LastName">
+                                <label class="question-title " data-title="<strong>Suburb/City</strong>">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    <strong>Suburb/City</strong>                                </label>
+                                
+                                
+                                <div class="answers-container ">
+                                                                            <input type="text" name="City" placeholder="My Suburb" required="" id="City-field" autocomplete="off">
+                                        <br>
+                                                                                <div style="display: none;" class="error-holder"></div>
+
+                                        <!-- <div class="answer-confirm" style="display: none;">
+                                            <button type="button" class="btn btn-primary answer_ok">OK <i class="fa fa-check"></i></button>
+                                            <span>press <strong>Enter ↵</strong></span>
+                                        </div> -->
+                                    
+                                </div>
+
+                            </div>
+                                                    <div id="Postcode" class="question " data-type="number" data-next="#FirstName, #LastName">
+                                <label class="question-title " data-title="<strong>Postcode</strong>">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    <strong>Postcode</strong>                                </label>
+                                
+                                
+                                <div class="answers-container ">
+                                                                            <input type="number" name="Postcode" placeholder="2001" required="" minlength="4" maxlength="4" id="Postcode-field" autocomplete="off">
+                                        <br>
+                                                                                <div style="display: none;" class="error-holder"></div>
+
+                                        <!-- <div class="answer-confirm" style="display: none;">
+                                            <button type="button" class="btn btn-primary answer_ok">OK <i class="fa fa-check"></i></button>
+                                            <span>press <strong>Enter ↵</strong></span>
+                                        </div> -->
+                                    
+                                </div>
+
+                            </div>
+</div>                                                    <div id="FirstName" class="question " data-type="text" data-next="#EmailAddress, #PhoneNumber">
+                                <label class="question-title " data-title="What's your <strong>first name?</strong> *">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    What's your <strong>first name?</strong> *                                </label>
+                                
+                                
+                                <div class="answers-container ">
+                                                                            <input type="text" name="FirstName" placeholder="First Name" required="" id="FirstName-field" autocomplete="off">
+                                        <br>
+                                                                                <div style="display: none;" class="error-holder"></div>
+
+                                        <!-- <div class="answer-confirm" style="display: none;">
+                                            <button type="button" class="btn btn-primary answer_ok">OK <i class="fa fa-check"></i></button>
+                                            <span>press <strong>Enter ↵</strong></span>
+                                        </div> -->
+                                    
+                                </div>
+
+                            </div>
+                                                    <div id="LastName" class="question " data-type="text" data-next="#EmailAddress, #PhoneNumber">
+                                <label class="question-title " data-title="What's your <strong>last name?</strong> *">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    What's your <strong>last name?</strong> *                                </label>
+                                
+                                
+                                <div class="answers-container ">
+                                                                            <input type="text" name="LastName" placeholder="Last Name" required="" id="LastName-field" autocomplete="off">
+                                        <br>
+                                                                                <div style="display: none;" class="error-holder"></div>
+
+                                        <!-- <div class="answer-confirm" style="display: none;">
+                                            <button type="button" class="btn btn-primary answer_ok">OK <i class="fa fa-check"></i></button>
+                                            <span>press <strong>Enter ↵</strong></span>
+                                        </div> -->
+                                    
+                                </div>
+
+                            </div>
+                                                    <div id="EmailAddress" class="question " data-type="email" data-next="#final">
+                                <label class="question-title " data-title="What's your <strong>best email address?</strong> *">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    What's your <strong>best email address?</strong> *                                </label>
+                                
+                                
+                                <div class="answers-container ">
+                                                                            <input type="email" name="EmailAddress" placeholder="email@domain.com" required="" id="EmailAddress-field" autocomplete="off">
+                                        <br>
+                                                                                <div style="display: none;" class="error-holder"></div>
+
+                                        <!-- <div class="answer-confirm" style="display: none;">
+                                            <button type="button" class="btn btn-primary answer_ok">OK <i class="fa fa-check"></i></button>
+                                            <span>press <strong>Enter ↵</strong></span>
+                                        </div> -->
+                                    
+                                </div>
+
+                            </div>
+                                                    <div id="PhoneNumber" class="question " data-type="tel" data-next="#final">
+                                <label class="question-title " data-title="What's your <strong>mobile phone number?</strong> *">
+                                    <span><strong class="current_step_number">1</strong> <i class="fa fa-arrow-right fa-xs"></i> </span>
+                                    <!-- <span><strong class="current_step_number"></strong> <i class="fa fa-arrow-right fa-xs"></i> </span> -->
+                                    What's your <strong>mobile phone number?</strong> *                                </label>
+                                <p>We'll use this number to call you about your enquiry.</p>
+                                
+                                <div class="answers-container">
+                                                                            <input type="tel" name="PhoneNumber" placeholder="Your phone number" required="" id="PhoneNumber-field" autocomplete="off">
+                                        <br>
+                                                                                <div style="display: none;" class="error-holder"></div>
+
+                                        <!-- <div class="answer-confirm" style="display: none;">
+                                            <button type="button" class="btn btn-primary answer_ok">OK <i class="fa fa-check"></i></button>
+                                            <span>press <strong>Enter ↵</strong></span>
+                                        </div> -->
+                                    
+                                </div>
+
+                            </div>
+                        
+                        <div id="final" class="question">
+                            <label class="question-title">
+                                A <strong>text message with your code</strong> has been sent to:
+                                <br>
+                                <b id="entered_phone_number"></b>
+                                <br>
+                                Please enter your code to verify this number.
+                            </label>
+
+                            <div class="answers-container">
+                                <div class="code_section">
+                                    <div class="form-group">
+                                        <!-- Single SMS verification input (PRD compliant - NO letter-spacing!) -->
+                                        <input type="text" id="verification-code" name="verification_code" placeholder="******" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" class="verification-input" style="width: 220px; text-align: center; font-size: 20px; font-weight: 500; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                                    </div>
+                                    <div class="error-holder"></div>
+                                    <button id="resend-code" type="button" class="btn btn-warning" onclick="this.disabled = true;
+            sendCode();" style="display: none;">Resend code</button>
+
+                                </div>
+
+                                <button style="background-color: #fbb829; border-radius: 0px; border: none; padding: 10px 20px 10px 20px;font-size: 18px;font-weight: 600;" id="verify-code" type="button" class="btn btn-primary" onclick="verifyCode();" disabled="">See If I Qualify</button>
+                                <p>By clicking the button above you acknowledge that you have read, understood and accepted Solar Rebates' <a href="https://solarrebates.com.au/privacy-policy/" target="_blank">Privacy Policy</a> and <a href="https://solarrebates.com.au/terms/" target="_blank">Terms of Use</a>. You provide consent for Solar Rebates or one of our partners to contact you to discuss your options for solar and/or battery storage. We may receive a fee from our partners when you choose to use our service.</p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 action-buttons">
+                    <button id="next-question" type="button" class="btn btn-primary" disabled="">Next</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 action-buttons">
+                    <button id="prev-question" type="button" class="btn btn-secondary btn-sm d-none">Previous</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-5 offset-md-7">
+                </div>
+            </div>
+        </div>
+    <!-- Conditional Info Notice Section --> 
+          
+    </section>
+    <!-- End Info Notification Section -->
+    
+    <!-- Start 3 Column Section -->
+    <section style="background: rgba(249,249,249,1); padding: 75px 0;">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-ceter">
+                    <h2 style="font-size: 36px; font-weight: 700">
+                        Why Homes in Victoria Going Solar
+                    </h2>
+                </div>
+            </div>
+            <div class="row" style="margin-top: 40px;">
+                <div class="col-sm-4 text-left why_ener">
+                    <img class="footer-logo" src="images/solar-australia-icon-why-free.png">
+                    <div class="why_ener_text">
+                        <h3>Solar Rebates</h3>
+                        <p>Unlock up to $50,000 in Goverment rebates.</p>
+                    </div>
+                </div>
+                <div class="col-sm-4 text-left why_ener why_ener_center">
+                    <img class="footer-logo" src="images/solar-australia-icon-why-unlock.png">
+                    <div class="why_ener_text">
+                        <h3>Unlock Savings</h3>
+                        <p>Save thousands with Positively Geared Solar.</p>
+                    </div>
+                </div>
+                <div class="col-sm-4 text-left why_ener">
+                    <img class="footer-logo" src="images/solar-australia-icon-why-avoid.png">
+                    <div class="why_ener_text">
+                        <h3>Asset Write Offs</h3>
+                        <p>Tax benefits can give you up to $45K in tax credits.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- End 3 Column Section -->    
+    <!-- Copyright Footer -->
+    <footer>
+        <div class="container">
+            <div class="row footer_top">
+                <div class="col-sm-4 text-left footer_lg">
+                    <img class="footer-logo" src="images/solar-rebates-logo-square-stacked-white.png">
+                </div>
+                <div class="col-sm-4 text-left footer_about">
+                    <p>Solar Rebates helps home &amp; business owners understand which solar &amp; battery incentives they may be eligible for.</p>
+                </div>
+                <div class="col-sm-4 text-left footer_addess">
+                    <p>Get In Touch With Us</p>
+                    <p>Email: <a style="color: white;text-decoration: underline;" href="/cdn-cgi/l/email-protection#582b392e3d182b3734392a2a3d3a392c3d2b763b373576392d"><span class="__cf_email__" data-cfemail="ed9e8c9b88ad9e82818c9f9f888f8c99889ec38e8280c38c98">[email&nbsp;protected]</span></a></p>
+                </div>
+            </div>
+            <div class="row text-center" style="margin-bottom: 50px; margin-top: 100px;">
+                <p style="line-height: 2em;font-size: 14px;">Solar Rebates operates as a referral service for solar and battery solutions, partnering with solar companies to offer guidance on selecting the right solar products for your needs. The content provided on this website serves solely for informational purposes and should not be considered as professional advice. By accessing our website, you agree to our <a href="https://solarrebates.com.au/terms">Terms Of Use</a> and <a href="https://solarrebates.com.au/privacy-policy">Privacy Policy</a>. Please note that we may receive a fee from our partners if you decide to use our service.</p>
+            </div>
+            <div class="row footer_cpy">
+                <div class="col-sm-6 text-left">
+                    © Copyright Solar Rebates 2026 · All Rights Reserved
+                </div>
+                <div class="col-sm-6 text-right">
+                    <p><a href="https://solarrebates.com.au/privacy-policy"><span style="color: #ffffff;">Privacy Policy</span></a> · <span style="color: #ffffff;"><a style="color: #ffffff;" href="https://solarrebates.com.au/terms">Terms Of Use</a></span></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- End Copyright Footer -->
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const streetField = document.getElementById("Street-field");
+
+    if (streetField) {
+        streetField.disabled = false;
+        streetField.removeAttribute("disabled");
+        streetField.classList.remove("gm-err-autocomplete");
+
+        streetField.placeholder = "Enter your full street address";
+    }
+});
+</script>
+    <!-- Configuration for JavaScript (from config.php) -->
+    <script data-cfasync="false" src="js/email-decode.min.js?v=20260910b"></script><script>
+        // Lead Type Configuration - passed from PHP config.php
+        var LEAD_TYPE_CONFIG = {"residential solar":{"zapier_webhook_url":"https:\/\/hooks.zapier.com\/hooks\/catch\/695165\/uk46vwn\/","zapier_secondary_webhooks":["https:\/\/hooks.zapier.com\/hooks\/catch\/695165\/3o59llw\/"],"thank_you_page_url":"https:\/\/solarrebates.com.au\/thanks\/","email_subject":"New Solar Rebates Lead - Residential Solar","lead_type_label":"Residential Solar"},"battery":{"zapier_webhook_url":"https:\/\/hooks.zapier.com\/hooks\/catch\/695165\/uz4yqvj\/","zapier_secondary_webhooks":[],"thank_you_page_url":"https:\/\/solarrebates.com.au\/battery-thanks\/","email_subject":"New Solar Rebates Lead - Battery","lead_type_label":"Battery"},"commercial solar":{"zapier_webhook_url":"https:\/\/hooks.zapier.com\/hooks\/catch\/695165\/uf7esnm\/","zapier_secondary_webhooks":[],"thank_you_page_url":"https:\/\/solarrebates.com.au\/commercial-thanks\/","email_subject":"New Solar Rebates Lead - Commercial Solar","lead_type_label":"Commercial Solar"}};
+        var DEFAULT_LEAD_TYPE = 'residential solar';
+        var BRAND_NAME = 'Solar Rebates';
+
+        // ============================================================
+        // GOOGLE SHEET SUBMISSION (no OTP)
+        // ============================================================
+        // Paste the /exec URL from your Apps Script Web app deployment here.
+        var GOOGLE_SHEET_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzzaxoB_firWupy-Jx7AgCUxoP1Qk8DxnCIxKY9ipeEWZaXHR4A1TLHst8-iP0dofrjNQ/exec';
+        // Note: the editor also shows a Workspace form of this URL,
+        // https://script.google.com/a/macros/vcommission.com/s/<id>/exec
+        // That one can bounce anonymous visitors to a Google login. The generic
+        // /macros/s/<id>/exec above is the public endpoint — use it.
+
+        // true  = skip SMS verification, write straight to the sheet on the phone step
+        // false = original behaviour (send OTP -> verify -> process.php -> Zapier)
+        var SKIP_OTP_VERIFICATION = true;
+
+        // Phone number validation.
+        // true  = must be a complete AU mobile (04XX XXX XXX), format enforced as you type
+        // false = accept any digits, any length, no format mask
+        var STRICT_PHONE_VALIDATION = false;
+
+        // Minimum digits in relaxed mode. 1 = anything non-empty.
+        var PHONE_MIN_DIGITS = 1;
+
+        // Street address validation.
+        // true  = must look like "12 Smith Street" (number + street name)
+        // false = accept any typed address, for manual entry or non-AU formats
+        var STRICT_ADDRESS_VALIDATION = false;
+
+        // Minimum characters in relaxed mode.
+        var ADDRESS_MIN_CHARS = 3;
+
+        // Postcode length bounds, applied when STRICT_ADDRESS_VALIDATION is false.
+        // The markup hardcodes 4 (AU); these widen it for PINs, ZIPs and the like.
+        var POSTCODE_MIN_LENGTH = 3;
+        var POSTCODE_MAX_LENGTH = 10;
+
+        // Also fire the Zapier webhook from the browser. process.php no longer runs
+        // when OTP is skipped, so turn this on if you still want leads in Zapier.
+        var ALSO_SEND_TO_ZAPIER = false;
+
+        // How long to wait for the sheet before redirecting anyway (ms).
+        var SHEET_SUBMIT_TIMEOUT_MS = 6000;
+
+        // true  = if the row does not reach the sheet, show the reason on screen
+        //         instead of sending the user to the thank-you page (use while setting up)
+        // false = always show the thank-you page; failures are logged and retried later
+        var SHEET_SUBMIT_STRICT = true;
+
+        // Thank-you page. true = use the thanks.html bundled with this form,
+        // false = use the external URLs in LEAD_TYPE_CONFIG.
+        var USE_LOCAL_THANK_YOU = true;
+        var LOCAL_THANK_YOU_URL = 'thanks.html';
+
+        // Used only if LEAD_TYPE_CONFIG has no thank-you URL for the detected lead type.
+        var FALLBACK_THANK_YOU_URL = 'https://solarrebates.com.au/thanks/';
+
+        // ============================================================
+        // GOOGLE PLACES (address autocomplete)
+        // ============================================================
+        // The key must allow the domain you are testing on under
+        // Credentials -> Key -> Website restrictions.
+        var MAPS_API_KEY = 'AIzaSyC-l6MkGn9x_RKsGWWinL26qAdTRnp-9BI';
+
+        // Countries the address suggestions are limited to.
+        // ['au'] = Australia only (production). [] = worldwide (handy while testing).
+        var MAPS_COUNTRIES = ['au'];
+    </script>
+    
+    <!-- jQuery first, then Bootstrap JS -->
+    <script src="js/jquery-3.2.1.min.js?v=20260910b" defer=""></script>
+    <script src="js/bootstrap.min.js?v=20260910b" defer=""></script>
+    <script src="js/jquery.inputmask.min.js?v=20260910b" defer=""></script>
+    <!-- Core theme JS-->
+    <script src="js/custom.js?v=20260910b" defer=""></script>
+    <!-- Maps Autocomplete JS -->
+    <script src="js/maps-autocomplete.js?v=20260910b" defer=""></script>
+    <!-- Form Logic -->
+</body></html>

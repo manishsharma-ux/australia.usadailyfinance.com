@@ -1,0 +1,683 @@
+/* Smooth Fonts */
+body, input, button, select, textarea, p {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Notification Bar */
+    .info-notification {
+        background-color: #ffffff;
+        border-left: 6px solid #0d6efd;
+        border-top: 1px solid #b2d1ff;
+        border-bottom: 1px solid #b2d1ff;
+        border-right: 1px solid #b2d1ff;
+        padding: 15px;
+        margin: 40px 0;
+        border-radius: 4px;
+        display: flex;
+        align-items: flex-start;
+    }
+    
+    .info-icon {
+        color: #0d6efd;
+        font-size: 1.2rem;
+        margin-right: 10px;
+        min-width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 1px solid #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-style: normal;
+        font-family: serif;
+        font-weight: bold;
+    }        
+    
+    .info-content {
+        flex-grow: 1;
+        color: #000033;
+        font-weight: 300;
+    }
+
+
+    .help-icon {
+        color: #6c757d;
+        border: 1px solid #6c757d;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        font-size: 0.7rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 5px;
+        cursor: help;
+    }
+
+@media screen and (max-width: 440px) {  
+    .info-content {
+        font-size:13px;
+    }
+}
+
+/* Chrome, Safari, Edge, Opera */
+section.questions input::-webkit-outer-spin-button,
+section.questions input::-webkit-inner-spin-button,
+#verify_phone_number input::-webkit-outer-spin-button,
+#verify_phone_number input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* Firefox */
+::placeholder {
+  color: #026475;
+  opacity: 0.5; /* Firefox */
+}
+
+::-ms-input-placeholder { /* Edge 12 -18 */
+  color: #026475;
+}
+
+body, input, button, select, textarea, p {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+section.questions input[type=number],
+#verify_phone_number input[type=number] {
+    -moz-appearance: textfield;
+}
+#verify-code:disabled {
+    cursor: not-allowed;
+}
+select:invalid {
+    color: gray;
+}
+section.questions .container {
+    max-width: 910px;
+}
+nav.navbar.static-top{
+    height: 80px;
+    background: rgba(247,247,247,1);
+}
+img.float-left{
+    max-height: 64px;
+    width: auto;
+}
+.ch_groups {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    justify-content: center;
+    column-gap: 15px;
+}
+#City,#Postcode{
+    padding-top: 20px;
+    margin: 0;
+    flex-basis: 30.3%;
+}
+#Street{
+    padding-bottom: 0;
+}
+.ch_groups .answers-container {
+    margin-top: 0;
+}
+.footer-logo{
+    height: 112px;
+    width: auto;
+}
+h1 {
+    font-size:2rem;
+    font-weight: 500 !important;
+    color: #026475;
+}
+h2{
+    font-weight: 500 !important;
+}
+.why_ener{
+    display: flex;
+    background: white;
+    padding: 19px;
+}
+.headline{
+    font-weight:700; color: #026475; font-size: 43px;
+}
+@media (min-width: 576px){
+    .why_ener_center{
+        margin-left: 30px;
+        margin-right: 30px;
+    }
+    .why_ener {
+        -webkit-box-flex: 0;
+        -ms-flex: 0 0 calc(33.333333% - 20px) !important;
+        flex: 0 0 calc(33.333333% - 20px) !important;
+        max-width: calc(33.333333% - 20px) !important;
+    }
+    #BillSize li label{
+        padding: 25px 41px;
+    }
+}
+.why_ener img{
+    width: 80px;
+    height: 80px;
+}
+.why_ener_text{
+    margin-left: 20px;
+}
+.why_ener_text p{
+    margin-bottom: 0px;
+}
+h3 {
+    font-weight:700;
+    font-size:24px;
+    margin-bottom:15px;
+}
+.static-top .float-left{
+    height: auto;
+}
+/*mobile version*/
+@media screen and (max-width: 749px) {
+    h1 {
+        font-size:1.6rem;
+    }
+    .static-top .float-left{
+        width: 50%;
+    }
+    .headline{
+        font-size: 31px;
+    }
+    .ch_groups {
+        flex-direction: column;
+    }
+    #City input[type="text"],#Postcode input[type="number"]{
+        max-width: 100%;
+    }
+    #City{
+        padding-bottom: 0;
+    }
+}
+
+body {
+    background: white;
+    color: #026475;
+    font-family: Poppins;
+    text-align: center;
+}
+section.questions .progress {
+    height: 8px;
+    margin-top: 50px;
+    background-color: rgba(204,222,226,1);
+    border-radius: 0px;
+}
+section.questions .question {
+    display: none;
+    padding-top: 40px;
+    padding-bottom: 30px;
+    margin: auto;
+    text-align: center;
+}
+section.questions .question p{
+    opacity:0.5;
+}
+section.questions .question.active {
+    display: block;
+}
+section.questions .question p:first-child {
+    color: #b8b8b8;
+    font-size: 20px;
+}
+section.questions .question label {
+    position: relative;
+    /*font-size: 20px;*/
+    font-size: 24px;
+    margin-bottom: 10px;
+    font-weight: 500;
+    color: #026475;
+}
+
+section.questions .question p a {
+    color: #000033;
+    text-decoration: underline;
+}
+section.questions .question label a:hover {
+    color: #007bff;
+}
+
+section.questions .question .answers-container #Street-field{
+    font-size: 18px;
+    max-width: 550px;
+}
+
+section.questions .question label.question-title span {
+    position: absolute;
+    left: -30px;
+    font-size: 18px;
+    top: 6px;
+    line-height: 25px;
+    display:none;
+}
+section.questions .question label.question-title span i {
+    font-size: 12px;
+}
+section.questions .question .answers-container.icon-dollar:before {
+    content: "\f155";
+    font-family: FontAwesome;
+    font-weight: 400;
+    margin-top: 1px;
+    font-size: 26px;
+    position: absolute;
+    margin-left: 0px;
+}
+.section.questions .answers-container {
+    margin-top: 30px
+}
+section.questions .question .answers-container.icon-percent:before {
+    content: "\f295";
+    font-family: FontAwesome;
+    font-weight: 400;
+    margin-top: 1px;
+    font-size: 26px;
+    position: absolute;
+    margin-left: 100px;
+    /* right: -10px; */
+}
+section.questions .question .answers-container ul {
+    padding: 0;
+    margin: 0;
+}
+section.questions .question .answers-container ul li {
+    list-style: none;
+}
+section.questions .question .answers-container ul li input {
+    display: none;
+}
+section.questions .question .answers-container ul li label {
+    font-size: 18px;
+    margin-left: 5px;
+    margin-bottom: 0;
+    width: 450px;
+    max-width: 100%;
+    padding: 10px 5px 8px 20px;
+    border: 1px solid #f9f9f9;
+    margin-bottom: 15px;
+    background: white;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #026475;
+    text-align: center;
+    font-weight: 500;
+}
+section.questions .question .answers-container ul li label:hover {
+    outline: solid 2px #286782;
+}
+section.questions .question .answers-container ul li label span {
+    padding: 5px 7px;
+    border: 1px solid #87888f;
+    background: #131f3e;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+section.questions .question .answers-container ul li input:checked + label {
+    outline: solid 2px #026475;
+}
+section.questions .question .answers-container ul li input:checked + label:after {
+    /*    content: "\f00c";
+        font-family: FontAwesome;
+        font-weight: 400;
+        position: absolute;
+        right: 20px;
+        top: calc(50% - 10px);*/
+}
+section.questions .question .answers-container ul li input:checked + label span {
+    color: #000033;
+    background: white;
+}
+section.questions .question .answers-container ul li input:disabled + label {
+    cursor: not-allowed;
+}
+section.questions .question .answers-container select,
+section.questions .question .answers-container input[type="text"],
+section.questions .question .answers-container input[type="email"],
+section.questions .question .answers-container input[type="number"],
+section.questions .question .answers-container input[type="tel"] {
+    opacity: 1;
+    mix-blend-mode: normal;
+    color: rgb(30, 87, 111);
+    padding: 0px;
+    border-radius: 5px;
+    font-size: 18px;
+    font-weight: 300;
+    border-color: #c7dce5;
+    font-style: normal;
+    background-image: none;
+    background-position: center center;
+    background-repeat: repeat;
+    background-size: cover;
+    border-style: solid;
+    width: 100%;
+    border-width:1px;
+    height: 41px;
+    outline: 0;
+    margin-bottom: 10px;
+    max-width: 390px;
+    text-align: center;
+}
+section.questions  #HomeApproximateValue input[type="text"],
+section.questions  #InvesmentApproximateValue input[type="text"],
+section.questions  #HomeLoanBalance input[type="text"],
+section.questions  #InvesmentBalance input[type="text"],
+section.questions  #AnnualHouseIncome input[type="text"]
+{
+    padding-left: 25px;
+    padding-right: 25px;
+}
+section.questions .question .answers-container select option {
+    color: black;
+}
+section.questions .question .answers-container .error-holder {
+    display: none;
+    color: #ff2d2d;
+    font-size: 12px;
+    background: white;
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 0px;
+    max-width: 390px;
+    margin: auto;
+}
+section.questions .question .answers-container .success-holder {
+    display: none;
+    color: green;
+    font-size: 12px;
+    background: white;
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 0px;
+}
+section.questions .question .answers-container .answer-confirm {
+    margin-top: 10px;
+}
+section.questions .question .answers-container span {
+    font-size: 12px;
+}
+
+section.questions .action-buttons #next-question,
+section.questions .action-buttons #prev-question {
+    width: 170px;
+    margin-bottom: 10px;
+    background: #fbb829;
+    border: 0px;
+    padding: 10px 25px;
+    border-radius:0px;
+    text-transform: uppercase;
+}
+section.questions .action-buttons #prev-question {
+    background: rgba(255,255,255,0);
+    color: #026475;
+}
+
+section.questions .question .answers-container .code_section {
+    margin-bottom: 30px;
+}
+section.questions .question .answers-container .code_section p {
+    font-size: 12px;
+    text-align: center;
+}
+section.questions .question .answers-container .code_section input {
+    margin: 0 5px;
+    text-align: center;
+    font-size: 24px;
+    width: 30px;
+}
+
+section.questions .question .answers-container #verify-code {
+    margin-bottom: 20px;
+}
+
+#HomeInterestRate .answers-container input[type="number"],
+#InvestmentInterestRate .answers-container input[type="number"]{
+    width: 100px;
+    text-align: center;
+    padding-left: 0;
+}
+
+#Age .answers-container input[type="number"] {
+    width: 120px;
+}
+.questions label i{
+    display: block;
+    font-size: 40px;
+    padding-bottom: 20px;
+}
+section.questions .question label.has_icon{
+    margin-bottom: 10px;
+}
+
+@media screen and (min-width: 749px) {
+    #LastName,#PhoneNumber{
+        padding-top: 0;
+    }
+    #MovingDate-field{
+        max-width: 273px;
+    }
+    section.questions .question .answers-container ul {
+        display: flex;
+        justify-content: center;
+    }
+    section.questions .question .answers-container ul li label{
+        width: 100%;
+        max-width: 100%;
+        padding: 25px 50px;
+        margin-left: auto;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    section.questions #ElectricityBillAmount .answers-container ul li label{
+        padding: 25px 20px;
+    }
+    section.questions #ExistingSolarReason .answers-container ul li label{
+        padding: 25px 45px;
+    }
+    section.questions #ShadingIssues .answers-container ul li label{
+        padding: 25px 8px;
+    }
+    section.questions .question .answers-container ul li:not(:last-child){
+        margin-right: 24px;
+        flex: 1 1 0;
+    }
+    section.questions #MovingHouse.question .answers-container ul li,section.questions #CustomerType.question .answers-container ul li,section.questions #Homeowner.question .answers-container ul li,section.questions #PlanType.question .answers-container ul li,section.questions #ElectricityUsage.question .answers-container ul li,section.questions #GasUsage.question .answers-container ul li,section.questions #ExistingSolar.question .answers-container ul li,section.questions #LifeSupport.question .answers-container ul li,section.questions #ExistingSolarAge.question .answers-container ul li,section.questions #BusinessOwner.question .answers-container ul li,section.questions #OwnOrLease.question .answers-container ul li,section.questions #LiveInBuilding.question .answers-container ul li{
+        flex: none;
+    }
+    section.questions .question .answers-container ul li img{
+        margin-bottom: 10px;
+    }
+    #ShadingIssues li{
+        width: 23%;
+    }
+    #RoofType li,#HomeAge li{
+        width: 30%;
+    }
+    #BillSizeCommercial li{
+        width: 21%;
+    }
+    #BillSizeCommercial li label{
+        padding: 25px 31px;
+    }
+}
+
+@media screen and (max-width: 991px) {
+    section.questions .question label {
+        font-size: 23px;
+    }
+}
+/*mobile version*/
+@media screen and (max-width: 749px) {
+    .questions label i{
+        display: inline;
+        margin-right: 5px;
+        font-size: 20px;
+    }
+
+    section.questions .question {
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+    section.questions .container {
+        padding-right: 20px;
+        padding-left: 20px;
+    }
+    section.questions .question .answers-container ul li label {
+        font-size: 16px;
+    }
+    section.questions .question label.question-title span {
+        left:5px;
+    }
+    section.questions .question label {
+        /*padding-left: 35px;  */
+        text-align:center;
+    }
+    section.questions .question .answers-container ul li input + label {
+        font-size: 16px;
+        margin-left: 0;
+    }
+    section.questions .question .answers-container select,
+    section.questions .question .answers-container input[type="text"],
+    section.questions .question .answers-container input[type="email"],
+    section.questions .question .answers-container input[type="number"],
+    section.questions .question .answers-container input[type="tel"] {
+        font-size:16px;
+        max-width:280px;
+    }
+    section.questions .question p {
+        font-size: 12px;
+    }
+    /*section.questions #final.question label { padding-left: 0px; }*/
+    section.questions #final.question label b {
+        display: block;
+    }
+    section.questions #final.question label br {
+        display: none;
+    }
+    .footer_cpy p, .footer_cpy .text-left, .footer_lg{
+        text-align: center !important;
+    }
+    .footer_about p, .footer_addess p{
+        text-align: center;
+    }
+    .footer_about{
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+}
+section.questions .question .answers-container ul li img{
+    width: 100px;
+    height: 100px;
+}
+@media screen and (max-width: 440px) {
+    section.questions .question label {
+        font-size: 16px;
+    }
+    section.questions .question .answers-container ul li input + label {
+        font-size: 14px;
+        padding-right: 20px;
+    }
+    section.questions .question .answers-container ul li input:checked + label:after {
+        right: 5px;
+    }
+    section.questions .question .answers-container ul li img{
+        width: 50px;
+        height: 50px;
+        margin-right: 15px;
+    }
+    .static-top img{
+        width: auto !important;
+        height: 40px !important;
+    }
+    .why_ener{
+        margin: 20px;
+    }
+}
+
+.progress-bar.bg-primary{
+    background-color: rgba(40,103,130,1) !important;
+}
+.ch_disable{
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: .65;
+}
+.ch_error{
+    color: red;
+    font-size: 14px;
+}
+
+/* Matt's Edits */
+
+
+.preheader {
+    padding: 2px 7px 2px 7px;
+    color: #026475;
+    text-decoration: uppercase;
+    font-size: 14px;
+    letter-spacing: 12px;
+    font-weight:500;
+}
+
+.icon {
+    max-height: 100px;
+    margin-bottom: 25px;
+}
+
+.small-icon {
+    max-height: 50px;
+}
+
+.grey {
+    background-color:#f9f9f9;
+    padding: 75px 0 75px 0;
+}
+
+.white {
+    background-color:#ffffff;
+    padding: 75px 0 100px 0;
+}
+
+p {
+    font-weight: 300;
+}
+
+footer {
+    background-color:#026475;
+    padding: 100px 0px 30px 0px;
+    font-size:12px;
+    color: #ffffff;
+}
+
+.footer_top{
+    font-size: 16px;
+    margin-bottom: 60px;
+}
+
+.fa-icon {
+    font-size:30px;
+    color: #00659E;
+    padding-bottom: 20px;
+}
+
+.icon-list {
+    font-weight:300;
+    margin-top:-5px;
+}
+
+.hero {
+    background-color:#f5972e;
+    color:#ffffff;
+    padding:80px 0 100px 0;
+}

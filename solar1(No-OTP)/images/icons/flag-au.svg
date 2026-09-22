@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="Australia">
+  <title>Australia</title>
+  <path fill="#00247d" d="M0 0h1280v640H0z"/>
+
+  <!-- Union Jack, drawn at 60x30 and scaled into the 640x320 canton -->
+  <g transform="scale(10.6667)">
+    <clipPath id="au-canton"><path d="M0 0h60v30H0z"/></clipPath>
+    <clipPath id="au-saltire"><path d="M30 15h30v15zv15H0zH0V0zV0h30z"/></clipPath>
+    <g clip-path="url(#au-canton)">
+      <path d="M0 0l60 30m0-30L0 30" stroke="#fff" stroke-width="6"/>
+      <path d="M0 0l60 30m0-30L0 30" clip-path="url(#au-saltire)" stroke="#cf142b" stroke-width="4"/>
+      <path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"/>
+      <path d="M30 0v30M0 15h60" stroke="#cf142b" stroke-width="6"/>
+    </g>
+  </g>
+
+  <!-- Commonwealth Star and the Southern Cross -->
+  <g fill="#fff">
+    <path d="M320.0 375.0 L340.2 438.0 L402.1 414.5 L365.5 469.6 L422.4 503.4 L356.5 509.1 L365.6 574.6 L320.0 526.7 L274.4 574.6 L283.5 509.1 L217.6 503.4 L274.5 469.6 L237.9 414.5 L299.8 438.0 Z"/>
+    <path d="M1024.0 442.0 L1037.5 484.0 L1078.7 468.4 L1054.3 505.1 L1092.2 527.6 L1048.3 531.4 L1054.4 575.1 L1024.0 543.1 L993.6 575.1 L999.7 531.4 L955.8 527.6 L993.7 505.1 L969.3 468.4 L1010.5 484.0 Z"/>
+    <path d="M832.0 205.0 L845.5 247.0 L886.7 231.4 L862.3 268.1 L900.2 290.6 L856.3 294.4 L862.4 338.1 L832.0 306.1 L801.6 338.1 L807.7 294.4 L763.8 290.6 L801.7 268.1 L777.3 231.4 L818.5 247.0 Z"/>
+    <path d="M1024.0 26.0 L1037.5 68.0 L1078.7 52.4 L1054.3 89.1 L1092.2 111.6 L1048.3 115.4 L1054.4 159.1 L1024.0 127.1 L993.6 159.1 L999.7 115.4 L955.8 111.6 L993.7 89.1 L969.3 52.4 L1010.5 68.0 Z"/>
+    <path d="M1152.0 154.0 L1165.5 196.0 L1206.7 180.4 L1182.3 217.1 L1220.2 239.6 L1176.3 243.4 L1182.4 287.1 L1152.0 255.1 L1121.6 287.1 L1127.7 243.4 L1083.8 239.6 L1121.7 217.1 L1097.3 180.4 L1138.5 196.0 Z"/>
+    <path d="M1088.0 325.0 L1097.1 347.4 L1121.3 349.2 L1102.8 364.8 L1108.6 388.3 L1088.0 375.6 L1067.4 388.3 L1073.2 364.8 L1054.7 349.2 L1078.9 347.4 Z"/>
+  </g>
+</svg>

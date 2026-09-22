@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Thanks — your rebate check is on its way | Optimal Transnational</title>
+    <meta name="description" content="Your solar and battery rebate enquiry has been received. Our Appointment officer will be in touch shortly.">
+
+    <link rel="icon" href="images/icons/mfavicon.svg" type="image/svg+xml">
+    <link rel="icon" href="images/mfavicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/mfavicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/mfavicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+    <meta name="theme-color" content="#135e70">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet">
+    <link href="css/font-awesome.min.css?v=aaaf1048" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="css/bootstrap.min.css?v=2c0f3dcf" crossorigin="anonymous">
+    <link href="css/style.css?v=9533975e" rel="stylesheet">
+
+    <style>
+        .ty-band {
+            position: relative;
+            padding: 70px 0 90px;
+            background: var(--canvas);
+        }
+        /* the same dark band the form page opens with, so the two pages read
+           as one journey */
+        .ty-band::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 190px;
+            background: var(--brand-700);
+        }
+        .ty-band .container { position: relative; z-index: 1; }
+        .ty-panel {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-top: 4px solid var(--accent-600);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 46px 48px 44px;
+            text-align: left;
+            overflow: hidden;
+        }
+        .ty-tick {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 24px;
+            border-radius: 50%;
+            background: var(--accent-600);
+            color: #ffffff;
+            font-size: 26px;
+        }
+        .ty-panel h1 {
+            margin-bottom: 14px;
+            color: var(--ink-900);
+            font-family: var(--font-head);
+            font-size: 33px;
+            font-weight: 700;
+            line-height: 1.18;
+            letter-spacing: -.025em;
+            text-align: center;
+        }
+        .ty-lead {
+            max-width: 40em;
+            margin: 0 auto 40px;
+            color: var(--ink-500);
+            font-size: 17px;
+            font-weight: 400;
+            line-height: 1.7;
+            text-align: center;
+        }
+        .ty-lead strong { color: var(--brand-600); font-weight: 700; }
+
+        .ty-next {
+            margin-top: 4px;
+            padding-top: 32px;
+            border-top: 1px solid var(--line);
+        }
+        .ty-next h2,
+        .ty-summary h2 {
+            margin-bottom: 20px;
+            color: var(--brand-600);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+        }
+        .ty-steps { margin: 0; padding: 0; list-style: none; counter-reset: ty; }
+        .ty-steps li {
+            position: relative;
+            counter-increment: ty;
+            padding: 0 0 22px 50px;
+            color: var(--ink-700);
+            font-size: 15.5px;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+        .ty-steps li:last-child { padding-bottom: 0; }
+        .ty-steps li::before {
+            content: counter(ty);
+            position: absolute;
+            left: 0;
+            top: -2px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--brand-600);
+            border: 1.5px solid var(--brand-600);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 29px;
+            text-align: center;
+        }
+        /* connector between the numbered markers */
+        .ty-steps li:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            left: 15.5px;
+            top: 32px;
+            bottom: 8px;
+            width: 1.5px;
+            background: var(--line);
+        }
+
+        .ty-summary {
+            margin-top: 32px;
+            padding: 26px 28px;
+            background: var(--brand-50);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-md);
+        }
+        .ty-summary dl {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            row-gap: 12px;
+            column-gap: 20px;
+            margin: 0;
+            font-size: 15px;
+        }
+        .ty-summary dt { color: var(--ink-400); font-weight: 400; font-size: 14px; }
+        .ty-summary dd { margin: 0; color: var(--ink-900); font-weight: 500; word-break: break-word; }
+
+        @media (max-width: 767px) {
+            .ty-band { padding: 40px 0 60px; }
+            .ty-panel { padding: 34px 22px 30px; border-radius: var(--radius-md); }
+            .ty-panel h1 { font-size: 25px; }
+            .ty-lead { font-size: 15.5px; margin-bottom: 30px; }
+            .ty-next { padding-top: 26px; }
+            .ty-steps li { font-size: 14.5px; padding-left: 44px; }
+            .ty-summary { padding: 20px 18px; }
+            .ty-summary dl { grid-template-columns: 1fr; row-gap: 2px; }
+            .ty-summary dt { margin-top: 12px; font-size: 12.5px; }
+        }
+    </style>
+    
+    <!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;
+n.push=n;
+n.loaded=!0;
+n.version='2.0';
+n.queue=[];
+t=b.createElement(e);
+t.async=!0;
+t.src=v;
+s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)
+}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+
+fbq('init', '1590984399156195');
+
+document.addEventListener('DOMContentLoaded', function () {
+    fbq('track', 'Lead');
+});
+</script>
+
+<noscript>
+<img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1590984399156195&ev=Lead&noscript=1"/>
+</noscript>
+<!-- End Meta Pixel Code -->
+    
+</head>
+<body>
+
+    <!-- Nav Start -->
+    <nav class="navbar static-top">
+        <div class="container">
+            <img class="float-left brand-logo" src="images/icons/logo-optimal-transnational2.svg" width="244" height="52" alt="Optimal Transnational — solar and battery rebate eligibility check">
+            <div class="phone_comodo" style="display: -webkit-box;display: -ms-flexbox; display: flex; justify-content: space-between;align-items: center;">
+                <img class="float-right secure-badge" src="images/icons/badge-secure.svg" width="186" height="34" alt="Secured with 256-bit SSL encryption" style="max-width:186px;">
+            </div>
+        </div>
+    </nav>
+    <!-- Nav End -->
+
+    <section class="ty-band">
+        <div class="container">
+            <div class="row d-flex justify-content-center">
+                <div class="col-md-9">
+                    <div class="ty-panel">
+                        <div class="ty-tick"><i class="fa fa-check"></i></div>
+
+                        <h1 id="ty-heading">Thanks, we've got your details</h1>
+                        <p class="ty-lead" id="ty-lead">
+                            Your enquiry has been received. Our Appointment officer will be in touch
+                            shortly to verify your details and guide you through the government
+                            incentives currently available for your property.
+                        </p>
+
+                        <div class="ty-next">
+                            <h2>What happens next</h2>
+                            <ul class="ty-steps">
+                                <li>We match your property against the federal and state incentives currently on offer.</li>
+                                <li>Our Appointment officer calls you on the number you gave us.</li>
+                                <li>We help you navigate your options and identify a solution designed to maximise your eligible incentives and reduce your energy costs.</li>
+                            </ul>
+                        </div>
+
+                        <div class="ty-summary" id="ty-summary" style="display:none;">
+                            <h2>What you sent us</h2>
+                            <dl id="ty-summary-list"></dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row footer_top">
+                <div class="col-sm-4 text-left footer_lg">
+                    <img class="footer-logo" src="images/icons/logo-optimal-transnational-stacked-white2.svg" width="155" height="88" alt="Optimal Transnational">
+                </div>
+                <div class="col-sm-4 text-left footer_about">
+                    <p>Optimal Transnational helps Australian homeowners work out which solar panel and home battery incentives they may be eligible for, and connects them with Clean Energy Council accredited installers.</p>
+                </div>
+                <div class="col-sm-4 text-left footer_addess">
+                    <p>Get in touch</p>
+                    <p>Email: <a href="#">Contact us</a></p>
+                </div>
+            </div>
+            <div class="row footer-disclaimer">
+                <div class="col-12">
+                <p><strong>Optimal Transnational is an independent, privately owned business. We are not affiliated with, endorsed by, or acting on behalf of the Australian Government or any state or territory government or agency.</strong></p>
+                </div>
+            </div>
+            <div class="row footer_cpy">
+                <div class="col-sm-6 text-left">
+                    © Optimal Transnational 2026 · All rights reserved Owned by vCommission Inc
+                </div>
+                <div class="col-sm-6 text-right">
+                    <p><a href="#"><span style="color: #ffffff;">Privacy Policy</span></a> · <span style="color: #ffffff;"><a style="color: #ffffff;" href="#">Terms of Use</a></span></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    (function () {
+        var data = null;
+        try {
+            data = JSON.parse(sessionStorage.getItem('optimaltransnational_lead_data') || 'null');
+        } catch (e) {
+            data = null;
+        }
+
+        // Opened directly, or the session expired — keep the generic message.
+        if (!data) return;
+
+        // ---- renter branch --------------------------------------------------
+        if (data.lead_type === 'renter referral') {
+            var gaveDetails = data.landlord_details_provided === 'Yes';
+
+            document.getElementById('ty-heading').textContent =
+                gaveDetails ? "Thanks, we'll get in touch with your landlord"
+                            : "Thanks for letting us know";
+
+            document.getElementById('ty-lead').innerHTML = gaveDetails
+                ? 'Solar rebates are claimed against the property, so they need to go '
+                  + 'through the owner. We\u2019ll reach out to the landlord details you '
+                  + 'gave us and let them know what the property may be eligible for.'
+                : 'Solar rebates are claimed against the property, so they need to go '
+                  + 'through the owner. If your landlord is ever open to it, come back '
+                  + 'and share their details \u2014 or pass this page on to them '
+                  + 'directly so they can run the check themselves.';
+
+            var nextList = document.querySelector('.ty-steps');
+            if (nextList) {
+                nextList.innerHTML = gaveDetails
+                    ? '<li>We contact your landlord to introduce the available incentives.</li>'
+                      + '<li>If they are interested, an accredited installer assesses the property.</li>'
+                      + '<li>Any rebate is claimed by the owner \u2014 you do not need to do anything further.</li>'
+                    : '<li>Nothing happens automatically \u2014 we have not contacted anyone.</li>'
+                      + '<li>Your landlord can run this check themselves at any time.</li>'
+                      + '<li>Tenants can still benefit once an owner installs, through lower power bills.</li>';
+            }
+
+            var landlordRows = [
+                ["Landlord's name", data.landlord_name],
+                ["Landlord's mobile", formatAuPhone(data.landlord_phone)]
+            ].filter(function (r) { return r[1] && String(r[1]).trim(); });
+
+            if (landlordRows.length) {
+                var ll = document.getElementById('ty-summary-list');
+                landlordRows.forEach(function (r) {
+                    var dt = document.createElement('dt');
+                    dt.textContent = r[0];
+                    var dd = document.createElement('dd');
+                    dd.textContent = r[1];
+                    ll.appendChild(dt);
+                    ll.appendChild(dd);
+                });
+                document.querySelector('.ty-summary h2').textContent = 'What you shared with us';
+                document.getElementById('ty-summary').style.display = 'block';
+            }
+            return;
+        }
+
+        var firstName = (data.first_name || '').trim();
+        if (firstName) {
+            document.getElementById('ty-heading').textContent = 'Thanks ' + firstName + ", we've got your details";
+        }
+
+        var phone = formatAuPhone(data.phone_number);
+        if (phone) {
+            document.getElementById('ty-lead').innerHTML =
+                'Your enquiry has been received. Our Appointment officer will be in touch shortly on ' +
+                '<strong>' + escapeHtml(phone) + '</strong> to verify your details and guide you ' +
+                'through the government incentives currently available for your property.';
+        }
+
+        var address = [data.street_address, data.suburb_city, data.postcode]
+            .filter(function (p) { return p && String(p).trim(); })
+            .join(', ');
+
+        var rows = [
+            ['Name', [data.first_name, data.last_name].filter(Boolean).join(' ')],
+            ['Phone number', formatAuPhone(data.phone_number)],
+            ['Email address', data.email_address],
+            ['Property address', address],
+            ['Quarterly bill', data.bill_size_commercial || data.bill_size],
+            ['Existing solar', data.existing_solar]
+        ].filter(function (r) { return r[1] && String(r[1]).trim(); });
+
+        if (!rows.length) return;
+
+        var list = document.getElementById('ty-summary-list');
+        rows.forEach(function (r) {
+            var dt = document.createElement('dt');
+            dt.textContent = r[0];
+            var dd = document.createElement('dd');
+            dd.textContent = r[1];
+            list.appendChild(dt);
+            list.appendChild(dd);
+        });
+        document.getElementById('ty-summary').style.display = 'block';
+
+        /**
+         * The form stores the number in E.164, +61412345678. Spaced out, it is
+         * something the reader can check at a glance against their own phone.
+         */
+        function formatAuPhone(value) {
+            var v = String(value || '').trim();
+            var m = /^\+61(\d{9})$/.exec(v.replace(/\s+/g, ''));
+            if (!m) return v;
+            var n = m[1];
+            return '+61 ' + n.slice(0, 3) + ' ' + n.slice(3, 6) + ' ' + n.slice(6);
+        }
+
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+    })();
+    </script>
+
+</body>
+</html>

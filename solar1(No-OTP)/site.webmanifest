@@ -1,0 +1,27 @@
+{
+  "name": "Optimal Transnational — Rebate Eligibility Check",
+  "short_name": "Optimal Transnational",
+  "icons": [
+    {
+      "src": "images/icons/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "images/optimal-transnational-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "images/optimal-transnational-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#135e70",
+  "background_color": "#f5f5f5",
+  "display": "standalone",
+  "description": "Check which Australian solar and battery rebates your home may qualify for.",
+  "lang": "en-AU"
+}
