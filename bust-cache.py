@@ -15,9 +15,9 @@ refetched on the next visit.
 
 IMPORTANT — this only works if the HTML itself is not cached. If the browser
 serves index.html from its own cache it never sees the new stamps. Ship the
-.htaccess next to this script, or set the equivalent on your server:
+solar1/.htaccess with the site, or set the equivalent on your server:
 
-    Apache   .htaccess in this repo (already written)
+    Apache   solar1/.htaccess in this repo (already written)
     Nginx    location ~* \\.html$ { add_header Cache-Control "no-cache"; }
     Vercel   "headers" in vercel.json, source "/(.*).html"
     Cloudflare / any CDN: purge the cache after deploying, or the edge keeps
@@ -130,7 +130,7 @@ def main():
     ap = argparse.ArgumentParser(
         description='Re-stamp ?v= cache keys on local CSS and JS.')
     ap.add_argument('files', nargs='*',
-                    help='HTML files to rewrite (default: *.html here, '
+                    help='HTML files to rewrite (default: *.html in solar1/, '
                          'excluding *.backup.html)')
     ap.add_argument('--check', action='store_true',
                     help='report what would change and write nothing')
@@ -139,7 +139,8 @@ def main():
                          'a per-file content hash')
     args = ap.parse_args()
 
-    root = pathlib.Path(__file__).resolve().parent
+    # The site lives in solar1/ so it deploys to /solar1/ on the domain.
+    root = pathlib.Path(__file__).resolve().parent / 'solar1'
 
     if args.files:
         targets = [pathlib.Path(f).resolve() for f in args.files]

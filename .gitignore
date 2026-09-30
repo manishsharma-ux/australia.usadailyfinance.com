@@ -1,2 +1,5 @@
 # editor backup files (may contain real credentials)
 *.save
+
+# macOS folder metadata — lists file names to anyone who fetches it
+.DS_Store

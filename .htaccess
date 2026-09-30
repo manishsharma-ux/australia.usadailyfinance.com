@@ -1,55 +1,20 @@
 # ============================================================================
-# Caching. Apache only — see the header of bust-cache.py for the Nginx and
-# Vercel equivalents.
+# Hostinger deploys this whole repo straight into public_html, so every file
+# in it is on the web. The pages live in their own folders (solar1/ is served
+# at /solar1/). Everything else here — setup notes, the Apps Script source,
+# tooling and old backups — is for us, not for visitors, so refuse it.
 #
-# The rule this file exists to enforce: the HTML is never cached, everything
-# it points at is cached hard. bust-cache.py puts a content hash in the ?v=
-# on every CSS and JS URL, so those URLs change whenever the file does. That
-# only reaches anyone if the browser re-reads the HTML on every visit.
-#
-# Every block is wrapped in <IfModule> so a host without the module ignores
-# it rather than returning a 500.
+# solar1/.htaccess holds the caching rules for the site itself.
 # ============================================================================
 
-<IfModule mod_headers.c>
+<IfModule mod_rewrite.c>
+    RewriteEngine On
 
-    # --- HTML: always revalidate -------------------------------------------
-    # no-cache does not mean "do not store", it means "ask me first". The
-    # browser keeps the file but checks with the server before using it, so an
-    # unchanged page still costs only a 304.
-    <FilesMatch "\.(html|htm)$">
-        Header set Cache-Control "no-cache, must-revalidate"
-    </FilesMatch>
+    # Notes, Apps Script source, scripts and editor backups, in any folder.
+    RewriteRule \.(md|py|gs|save)$ - [F,L]
+    RewriteRule \.backup\.[a-z]+$ - [F,L]
 
-    # --- Fingerprinted assets: cache for a year ----------------------------
-    # Safe only because bust-cache.py changes the URL when the file changes.
-    # If you ever reference a .css or .js without a ?v= stamp, it will be
-    # stuck in visitors' caches for a year — run bust-cache.py and check the
-    # output says every file is stamped.
-    <FilesMatch "\.(css|js)$">
-        Header set Cache-Control "public, max-age=31536000, immutable"
-    </FilesMatch>
-
-    # --- Fonts: cache for a year -------------------------------------------
-    # These are versioned by filename in practice; they change when the font
-    # itself is replaced, which is rare.
-    <FilesMatch "\.(woff2?|ttf|otf|eot)$">
-        Header set Cache-Control "public, max-age=31536000"
-    </FilesMatch>
-
-    # --- Images: a week ----------------------------------------------------
-    # Deliberately NOT a year. Images carry no ?v= stamp, so replacing one in
-    # place is the one change that cannot be forced through. A week keeps them
-    # fast without making a swapped logo invisible for months. If you do swap
-    # one, give the new file a new name.
-    <FilesMatch "\.(png|jpe?g|gif|webp|avif|svg|ico)$">
-        Header set Cache-Control "public, max-age=604800"
-    </FilesMatch>
-
-</IfModule>
-
-<IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml
-    AddOutputFilterByType DEFLATE application/javascript application/json
-    AddOutputFilterByType DEFLATE image/svg+xml
+    # Top-level folders and files that are not part of any page.
+    RewriteRule ^(google-apps-script|\.agents|bmw-m|claude|vercel)(/|$) - [F,L]
+    RewriteRule ^skills-lock\.json$ - [F,L]
 </IfModule>
