@@ -13,6 +13,7 @@
     # Notes, Apps Script source, scripts and editor backups, in any folder.
     RewriteRule \.(md|py|gs|save)$ - [F,L]
     RewriteRule \.backup\.[a-z]+$ - [F,L]
+    RewriteRule (^|/)\.DS_Store$ - [F,L]
 
     # Top-level folders and files that are not part of any page.
     RewriteRule ^(google-apps-script|\.agents|bmw-m|claude|vercel)(/|$) - [F,L]
