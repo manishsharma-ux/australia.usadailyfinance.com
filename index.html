@@ -61,7 +61,7 @@
 
         <!-- Form self-check. Shows a panel only if the form is broken (or with ?debug=1).
              Delete this tag for production. -->
-        <script src="js/diagnostics.js?v=ca736c0f"></script>
+        <script src="js/diagnostics.js?v=b7d040ca"></script>
 
         <script type="application/ld+json">
 {
@@ -853,7 +853,10 @@ document.addEventListener("DOMContentLoaded", function () {
         // GOOGLE SHEET SUBMISSION (no OTP)
         // ============================================================
         // Paste the /exec URL from your Apps Script Web app deployment here.
-        var GOOGLE_SHEET_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyAFrRbvjiivzYW9jYl67F7UDXico8igZlH2Qka3KkVW48TJsFlMb66hMBjPvKuufQcJw/exec';
+        var GOOGLE_SHEET_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbw0B4JnHE4t6IUgYSXs5Xvp3V_wFv7n8BkTWop9z9H6LQe3ADL5poorLsCRdka8-ErrLg/exec';
+        // NOT AKfycbyAFrRbv… or AKfycbxOkKY…: both still answer ?ping=1, but
+        // they run older code against the OLD spreadsheet (1WUbokw…), which has
+        // no CRM forwarding. Leads sent there never reach the main sheet.
         // Note: the editor also shows a Workspace form of this URL,
         // https://script.google.com/a/macros/vcommission.com/s/<id>/exec
         // That one can bounce anonymous visitors to a Google login. The generic
@@ -866,9 +869,9 @@ document.addEventListener("DOMContentLoaded", function () {
         // silently wrote blanks into seven columns.
         //
         // ALWAYS confirm with <url>?ping=1 after deploying. It must report:
-        //   "build":"otp-fast-redirect-2026-09-18"  — matches js/diagnostics.js
+        //   "build":"otp-crm-clickid-2026-09-30"  — matches js/diagnostics.js
         //   "otp":"configured"                   — the three TWILIO_* properties are set
-        //   "sheet_id":"1WUbokw-GVK5hnt1ZLi3HQ1lhObN43aMCEHCpP1fnO0c"
+        //   "sheet_id":"1jSAombFpIwvjqH0JWJmidKC5U50nDYxVaiDQgEzWkbo"
         // A different build, or no build field at all, means the URL is still
         // serving old code and the OTP step will fail on correct codes.
 
@@ -1009,9 +1012,9 @@ document.addEventListener("DOMContentLoaded", function () {
     <script src="js/bootstrap.min.js?v=e7ed36ce" defer=""></script>
     <script src="js/jquery.inputmask.min.js?v=5a4efbc6" defer=""></script>
     <!-- Core theme JS-->
-    <script src="js/custom.js?v=17005e7c" defer=""></script>
+    <script src="js/custom.js?v=89b8891c" defer=""></script>
     <!-- Maps Autocomplete JS -->
-    <script src="js/maps-autocomplete.js?v=96b7a518" defer=""></script>
+    <script src="js/maps-autocomplete.js?v=9a6b1c9e" defer=""></script>
     <!-- Form Logic -->
     
     <script>

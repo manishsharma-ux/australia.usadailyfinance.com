@@ -40,6 +40,52 @@ function generateEventId() {
 }
 
 // ============================================
+// CLICK ID (ClickFlare)
+// ============================================
+/**
+ * The tracker link lands visitors on /solar1/?p1=<cf_click_id>. That id is
+ * what matches a lead in the sheet back to the ad click that produced it, and
+ * it leaves the page as `clid` (Code.gs writes it to the "Click ID" column).
+ *
+ * Also kept in localStorage, so a visitor who comes back later on a URL
+ * without ?p1= is still credited to their click. A fresh ?p1= always wins.
+ */
+var SR_CLICK_ID_PARAMS = ['p1', 'cf_click_id', 'clickid'];
+var SR_CLICK_ID_KEY    = 'sr_click_id';
+var SR_CLICK_ID_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** A UUID or hex id, or ''. An unreplaced "{cf_click_id}" macro is not an id. */
+function srCleanClickId(value) {
+    var v = String(value || '').trim();
+    return /^[A-Za-z0-9._-]{1,100}$/.test(v) ? v : '';
+}
+
+function srClickId() {
+    var params = null;
+    try { params = new URLSearchParams(window.location.search); } catch (e) { /* very old browser */ }
+
+    if (params) {
+        for (var i = 0; i < SR_CLICK_ID_PARAMS.length; i++) {
+            var fromUrl = srCleanClickId(params.get(SR_CLICK_ID_PARAMS[i]));
+            if (fromUrl) {
+                try {
+                    localStorage.setItem(SR_CLICK_ID_KEY, JSON.stringify({ id: fromUrl, at: Date.now() }));
+                } catch (e) { /* storage blocked: the URL value still applies */ }
+                return fromUrl;
+            }
+        }
+    }
+
+    try {
+        var stored = JSON.parse(localStorage.getItem(SR_CLICK_ID_KEY) || 'null');
+        if (stored && Date.now() - Number(stored.at) < SR_CLICK_ID_TTL_MS) {
+            return srCleanClickId(stored.id);
+        }
+    } catch (e) { /* unreadable or blocked: no stored id */ }
+    return '';
+}
+
+// ============================================
 // HOTJAR EVENT TRACKING
 // ============================================
 var hotjarTracking = {
@@ -106,6 +152,10 @@ $(function () {
     var freshEventId = generateEventId();
     $('#event_id').val(freshEventId);
     console.log('[Optimal Transnational] Event ID generated:', freshEventId);
+
+    var clickId = srClickId();
+    $('#clid').val(clickId);
+    console.log('[Optimal Transnational] Click ID:', clickId || '(none on this visit)');
 
     // Hotjar: Track form start on first interaction
     $('form').one('click focus', 'input, select, textarea, label', function() {
@@ -1445,7 +1495,7 @@ function convertAmount(amount) {
 // Bump this in js/custom.js, js/maps-autocomplete.js and js/diagnostics.js
 // TOGETHER. diagnostics.js compares all three, so a stamp left behind is
 // reported as a half-uploaded js/ folder. `python3 bust-cache.py` checks it.
-var SR_CUSTOM_BUILD = 'otp-fast-redirect-2026-09-18';
+var SR_CUSTOM_BUILD = 'otp-crm-clickid-2026-09-30';
 
 // ============================================================================
 // PHONE VALIDATION MODE
@@ -2073,7 +2123,7 @@ function srBuildLeadData(questions, leadType, otpToken) {
         utm_term: $('#utm_term').val() || '',
         utm_ad_set_id: $('#utm_ad_set_id').val() || '',
         utm_ad_id: $('#utm_ad_id').val() || '',
-        clid: $('#clid').val() || '',
+        clid: $('#clid').val() || srClickId(),
 
         ip_address: $('#ip_address').val() || '',
         from_url: $('#from_url').val() || '',

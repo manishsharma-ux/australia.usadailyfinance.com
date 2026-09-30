@@ -11,7 +11,7 @@
     // Bump this in js/custom.js, js/maps-autocomplete.js and js/diagnostics.js
     // TOGETHER. diagnostics.js compares all three, so a stamp left behind is
     // reported as a half-uploaded js/ folder. `python3 bust-cache.py` checks it.
-    var EXPECTED_BUILD = 'otp-fast-redirect-2026-09-18';
+    var EXPECTED_BUILD = 'otp-crm-clickid-2026-09-30';
 
     var errors = [];
     var failedResources = [];

@@ -1,65 +1,91 @@
 /**
- * Optimal Transnational — Lead form → Google Sheet + Twilio Verify OTP
- * ====================================================================
+ * Optimal Transnational — Lead form → Google Sheet → CRM, with Twilio Verify OTP
+ * =============================================================================
  *
- * WHAT CHANGED IN THIS BUILD (read before deploying)
- * ---------------------------------------------------
- * The bug: a correct code came back as "That code has expired."
+ * This deployment does three things for every lead, in this order:
  *
- * The browser sends each OTP call twice — once over fetch, and again over
- * JSONP whenever the browser refuses to read the fetch reply. Twilio Verify
- * DELETES a verification the moment it is approved, so the second call asked
- * about a verification that no longer existed, got HTTP 404, and a 404 is
- * indistinguishable from a ten-minute expiry. The visitor typed the right code
- * and was told it was stale.
+ *   1. CHECKS THE SMS CODE the visitor typed (Twilio Verify).
+ *   2. WRITES THE ROW to the lead sheet, with a "Phone verified" column.
+ *   3. QUEUES THE PAYLOAD for the CRM on the "CRM outbox" tab, which a
+ *      one-minute trigger drains.
  *
- * Three things now prevent that:
+ * 1 and 2 happen in ONE execution, from ONE browser request. There is no
+ * token round-trip between them and so nothing to lose in the gap.
  *
- *   1. Idempotency. Every OTP call carries a request_id. The first answer for
- *      an id is cached and replayed verbatim, so a retry never reaches Twilio.
- *   2. A script lock around the Twilio check, so two genuinely concurrent
- *      copies of the same request serialise instead of racing.
- *   3. A 404 for a number that already holds a token is read as "already
- *      approved", not as "expired".
- *
- * Also: verification tokens are now HMAC-signed rather than held in the cache.
- * A cached token died after six hours (the CacheService ceiling) or whenever
- * the cache was evicted, and a stashed lead retried after that was thrown away
- * as unverified. A signed token needs no storage and survives both.
- *
- * SHEET
- * -----
- * Writes one row per lead into this 15-column layout:
- *
+ * ---------------------------------------------------------------------------
+ * SHEET  (unchanged — the 15 columns are exactly as specified)
+ * ---------------------------------------------------------------------------
  *   Date | Name | Phone number | Property address | Email address |
  *   Home Ownership | Energy System | Existing Solar | Solar Age |
  *   Roof Type | Home Age | Roof Shade | Bill range - quarterly |
  *   Landload Name | Landload Phone
  *
- * Rows are written against the sheet's own header row, not against this list,
- * so columns can be reordered in the sheet without touching this file.
+ * Two more columns, "Phone verified" and "Click ID", are appended
+ * automatically the first time this build runs. The 15 above are not touched,
+ * reordered or renamed. Rows are written against the sheet's own header row,
+ * so columns can be moved in the sheet without editing this file.
  *
- * DEPLOY
- * ------
- * Extensions → Apps Script → replace Code.gs with this file →
- * ⚙ Project Settings → Script Properties → the three TWILIO_* values →
- * run testEverything() once to grant permissions and check the credentials →
- * Deploy → Manage deployments → ✏️ → Version: **New version** → Deploy.
+ * Click ID is the ClickFlare click id the tracker puts on the landing URL as
+ * ?p1=<cf_click_id>. It matches a lead back to the ad click that produced it.
  *
- * Editing this file does NOT change what the /exec URL runs. Only a new
- * deployment version does. Confirm with <url>?ping=1 — the "build" it reports
- * must equal SCRIPT_BUILD below, and "otp" must say "configured".
+ * Two more tabs appear on their own: "CRM outbox" and "OTP Log".
+ *
+ * ---------------------------------------------------------------------------
+ * SMS VERIFICATION  (Twilio Verify, added 2026-09-22)
+ * ---------------------------------------------------------------------------
+ * The browser never holds a Twilio credential — anything in js/ is readable by
+ * everyone who loads the page, and that token is a password to a billable
+ * account. The page asks THIS script to send and check the code instead.
+ *
+ * Script Properties needed (Project Settings -> Script properties):
+ *   TWILIO_ACCOUNT_SID          AC…   Twilio console home
+ *   TWILIO_AUTH_TOKEN           the token beside it — treat as a password
+ *   TWILIO_VERIFY_SERVICE_SID   VA…   Verify -> Services
+ *
+ * A fourth, OTP_TOKEN_SECRET, is created automatically on first use. Do not
+ * delete it: doing so invalidates every verification token already issued.
+ *
+ * With none of them set, `checkOtpGate` lets every lead through and ?ping=1
+ * reports "otp":"not_configured". A half-finished setup must not silently
+ * reject a day of leads — but it must be visible, and that is where.
+ *
+ * ---------------------------------------------------------------------------
+ * CRM FORWARDING  (added 2026-09-19, unchanged by the OTP work)
+ * ---------------------------------------------------------------------------
+ * The sheet row is written first and the CRM payload is queued locally, so a
+ * CRM outage can never lose a lead and never slows the thank-you page.
+ *
+ *   CRM_URL     https://<crm domain>/api/webhooks/lead/agency
+ *   CRM_SECRET  the signing secret Optimal Transnational gave you
+ * then run crmSetup() once. Never paste CRM_SECRET into this file.
+ *
+ * ---------------------------------------------------------------------------
+ * DEPLOYING
+ * ---------------------------------------------------------------------------
+ * Editing this file changes NOTHING about what the /exec URL runs. A
+ * deployment stays pinned to the script version it was created with:
+ *
+ *   Deploy -> Manage deployments -> ✏️ edit -> Version: **New version** -> Deploy
+ *
+ * Then confirm in a PRIVATE window with <url>?ping=1. All four must be true:
+ *   "build":"otp-crm-clickid-2026-09-30"   — this file, actually serving
+ *   "otp":"configured"             — the three TWILIO_* properties are set
+ *   "crm":{"configured":true,"trigger":true}
+ *   "unmapped":[]                  — every sheet header has a value behind it
+ * Raw JSON, not a Google sign-in page. A sign-in page means "Who has access"
+ * is not set to Anyone, and every visitor loses their lead with no error.
+ *
+ * Run testEverything() first: it costs nothing and sends no SMS.
  */
 
 /** Bump with every edit. ?ping=1 reports it; js/diagnostics.js compares it. */
-var SCRIPT_BUILD = 'otp-fast-redirect-2026-09-18';
+var SCRIPT_BUILD = 'otp-crm-clickid-2026-09-30';
 
 /* ------------------------------------------------------------------ */
-/* Configuration                                                       */
+/* Configuration — sheet                                               */
 /* ------------------------------------------------------------------ */
 
-/** The spreadsheet leads are written to — the ID between /d/ and /edit. */
-var SHEET_ID    = '1WUbokw-GVK5hnt1ZLi3HQ1lhObN43aMCEHCpP1fnO0c';
+var SHEET_ID    = '1jSAombFpIwvjqH0JWJmidKC5U50nDYxVaiDQgEzWkbo';
 var SHEET_NAME  = 'Sheet1';            // falls back to the first tab if absent
 var TIMEZONE    = 'Australia/Sydney';  // timezone the Date column is written in
 var DATE_FORMAT = 'dd/MM/yyyy HH:mm';
@@ -82,6 +108,10 @@ var HEADERS = [
   'Landload Name',
   'Landload Phone'
 ];
+
+/* ------------------------------------------------------------------ */
+/* Configuration — OTP                                                 */
+/* ------------------------------------------------------------------ */
 
 /** Seconds a number must wait between two code requests. */
 var OTP_SEND_COOLDOWN_SECONDS = 30;
@@ -114,7 +144,8 @@ var OTP_IDEMPOTENCY_TTL_SECONDS = 600;
  * gone from Twilio's side before the check arrived.
  *
  *   true   the lead is written anyway, with "Phone verified" set to
- *          "No — <reason>" so it can be filtered or called with care.
+ *          "Not verified — <reason>" so it can be filtered or called with care.
+ *          It is also forwarded to the CRM carrying that same wording.
  *   false  the lead is refused and the visitor is asked for a new code.
  *
  * A wrong code ("incorrect") and an exhausted code ("rate_limited") are the
@@ -129,6 +160,10 @@ var DEFAULT_DIAL_CODE = '+61';
 /* Entry points                                                        */
 /* ------------------------------------------------------------------ */
 
+/**
+ * POST entry point. Honours ?callback= as well, because the page fires fetch
+ * and JSONP together and either may be the one that arrives.
+ */
 function doPost(e) {
   var params = (e && e.parameter) || {};
   var out    = handleRequest(parseBody(e));
@@ -140,6 +175,11 @@ function doPost(e) {
  *   /exec                          -> status in a browser
  *   /exec?ping=1[&callback=fn]     -> health check, writes nothing
  *   /exec?payload=...&callback=fn  -> JSONP write or OTP call
+ *
+ * JSONP exists because a <script> tag is not subject to CORS, and unlike a
+ * beacon or a hidden form it returns a result the page can actually read.
+ * Apps Script answers a fetch through a redirect the browser often refuses to
+ * let the page read, so this is the transport that always works.
  */
 function doGet(e) {
   var params = (e && e.parameter) || {};
@@ -179,8 +219,12 @@ function handleRequest(data) {
 /* ------------------------------------------------------------------ */
 
 /**
- * Confirms the deployment is public, points at the right spreadsheet, and can
- * send a code — without writing a row. js/diagnostics.js reads this.
+ * Confirms the deployment is public, points at the right spreadsheet, can send
+ * a code and can reach the CRM — without writing a row. js/diagnostics.js
+ * reads this, and so does the ?debug=1 panel on the form.
+ *
+ * Deliberately outside handleLead's lock: a health check that queues behind a
+ * lead is a health check that times out exactly when things are busiest.
  */
 function handlePing() {
   var twilio = twilioConfig();
@@ -190,8 +234,38 @@ function handlePing() {
     build: SCRIPT_BUILD,
     sheet_id: SHEET_ID,
     otp: twilio.ok ? 'configured' : 'not_configured',
-    otp_error: twilio.ok ? null : twilio.error
+    otp_error: twilio.ok ? null : twilio.error,
+
+    // "configured" only ever meant "the three properties are present and start
+    // with the right letters" — it never asked Twilio whether they work. A
+    // wrong Verify service SID passed that check and then failed every single
+    // code with a 404 the visitor was told was their fault. The GET below
+    // starts no verification and is not billed, so there is no reason not to.
+    otp_service: null,
+
+    // Never the secret itself — only whether one is set.
+    crm: crmStatus_()
   };
+
+  if (twilio.ok) {
+    var svc = twilioServiceCheck(twilio);
+    if (svc.ok) {
+      out.otp_service = {
+        ok: true,
+        name: svc.name,
+        code_length: svc.code_length,
+        expected_code_length: OTP_CODE_LENGTH,
+        code_length_matches: svc.code_length === OTP_CODE_LENGTH
+      };
+    } else {
+      // The properties are present but Twilio will not accept them, so every
+      // code is going to fail. Say so here rather than leaving "configured"
+      // to imply the opposite.
+      out.otp = 'unusable';
+      out.otp_error = svc.error;
+      out.otp_service = { ok: false, error: svc.error };
+    }
+  }
 
   try {
     var sheet   = getSheet();
@@ -218,15 +292,24 @@ function handlePing() {
 /* Leads                                                               */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Writes one lead: the sheet row, then the CRM queue entry.
+ *
+ * opts.skipGate is set only by handleVerifyAndSubmit, which has just checked
+ * the code itself. Nothing reachable from the web can set it — handleRequest
+ * calls this with one argument.
+ */
 function handleLead(data, opts) {
+  // Old callers sent {ping:true} here rather than to ?ping=1. Still answered,
+  // but from outside the lock now.
+  if (data && data.ping) return handlePing();
+
   if (!data || Object.keys(data).length === 0) {
     return { ok: false, error: 'Empty payload' };
   }
 
   // A lead carrying a phone number has to carry the token proving the number
   // answered an SMS. Checked before the lock — a rejection touches no sheet.
-  // handleVerifyAndSubmit has just done the check itself and passes skipGate;
-  // nothing reachable from the web can set it, as handleRequest passes one arg.
   if (!(opts && opts.skipGate)) {
     var gate = checkOtpGate(data);
     if (!gate.ok) return gate;
@@ -256,6 +339,9 @@ function handleLead(data, opts) {
     sheet.appendRow(row);
     var rowNumber = sheet.getLastRow();
     rememberEventId(data.event_id, rowNumber);
+
+    // After the sheet row, never instead of it. crmEnqueue_ cannot throw.
+    crmEnqueue_(data);
 
     return { ok: true, row: rowNumber, build: SCRIPT_BUILD };
 
@@ -310,10 +396,14 @@ function buildRow(d) {
     'landlord name': String(d.landlord_name || '').trim(),
     'landlord phone': formatPhone(d.landlord_phone),
 
-    // Every row says one of: "Verified (SMS)", "Not verified — reason", or
+    // Every row says one of: "Verified (SMS)", "Not verified — <reason>", or
     // "N/A — no phone number" for the renter branch, which never reaches OTP.
     'phone verified': String(d.otp_verified || '').trim() ||
                       (String(d.phone_number || '').trim() ? 'Not verified — no OTP' : 'N/A — no phone number'),
+
+    // ClickFlare's click id, from ?p1= on the landing URL. The form sends it
+    // as clid; the other two spellings cover a caller posting it directly.
+    'click id': formatClickId(d.clid || d.click_id || d.p1),
 
     // Fills the single "solar" column on a sheet still using the old
     // 9-column layout. Harmless on the current one, which has no such header.
@@ -325,11 +415,22 @@ function buildRow(d) {
 
 /**
  * Keeps the number intact as text. Sheets would otherwise strip the leading
- * zero from a local number and read a leading "+" as the start of a formula.
+ * zero from a local number and read a leading "+" as the start of a formula —
+ * the form submits E.164, +61412345678.
  */
 function formatPhone(phone) {
   var p = String(phone || '').replace(/\s+/g, '');
   return p ? "'" + p : '';
+}
+
+/**
+ * A click id is a UUID or a hex string. Anything else — including an
+ * unreplaced "{cf_click_id}" macro — is dropped rather than written, since
+ * this endpoint is public. Held as text for the same reason as the phone.
+ */
+function formatClickId(id) {
+  var v = String(id || '').trim();
+  return /^[A-Za-z0-9._-]{1,100}$/.test(v) ? "'" + v : '';
 }
 
 /* ------------------------------------------------------------------ */
@@ -338,7 +439,7 @@ function formatPhone(phone) {
 
 function normalise(header) {
   return String(header)
-    .replace(/[\u2018\u2019']/g, '')   // Landlord's Name -> landlords name
+    .replace(/[‘’']/g, '')   // Landlord's Name -> landlords name
     .trim()
     .toLowerCase()
     .replace(/\s+/g, ' ');
@@ -375,8 +476,9 @@ var HEADER_ALIASES = {
   'energy system type': 'energy system',
 
   'has solar': 'existing solar',
-  // Deliberately no 'solar' entry: a sheet on the old 9-column layout has one
-  // "solar" column and no Solar Age beside it, so it keeps the combined value.
+  // Deliberately no 'solar' entry: a sheet still on the old 9-column layout
+  // has one "solar" column and no Solar Age beside it, so it keeps the
+  // combined "Yes (More Than 5 Years)" value that buildRow writes for it.
 
   'existing solar age': 'solar age',
   'age of solar': 'solar age',
@@ -392,6 +494,8 @@ var HEADER_ALIASES = {
   'roof shading': 'roof shade',
   'shading issues': 'roof shade',
 
+  // The verification column. Renaming it in the sheet must not start writing
+  // blanks, and "Verified" is what someone reading the sheet will type.
   'verified': 'phone verified',
   'otp': 'phone verified',
   'otp verified': 'phone verified',
@@ -399,6 +503,14 @@ var HEADER_ALIASES = {
   'number verified': 'phone verified',
   'mobile verified': 'phone verified',
   'phone verification': 'phone verified',
+
+  'clickid': 'click id',
+  'click': 'click id',
+  'clid': 'click id',
+  'p1': 'click id',
+  'cf click id': 'click id',
+  'cf_click_id': 'click id',
+  'clickflare click id': 'click id',
 
   'bill range': 'bill range - quarterly',
   'bill range quarterly': 'bill range - quarterly',
@@ -432,8 +544,8 @@ function columnKey(header) {
 
 /**
  * One spreadsheet handle per execution. openById is the slowest call in this
- * file (~1s), and a verify-and-submit used to make it three times: the lead,
- * the OTP log, and the row upgrade. Once is enough.
+ * file (~1s), and a verify-and-submit would otherwise make it four times: the
+ * lead row, the OTP log, the CRM outbox and the row upgrade. Once is enough.
  */
 var SPREADSHEET_ = null;
 function getSpreadsheet() {
@@ -447,54 +559,118 @@ function getSheet() {
 }
 
 /**
+ * Columns this script adds on its own when the sheet has none for them, as
+ * [buildRow key, header text]. A column already present under any wording
+ * columnKey recognises is left exactly where it is.
+ */
+var AUTO_COLUMNS = [
+  ['phone verified', 'Phone verified'],
+  ['click id', 'Click ID']
+];
+
+/**
  * Returns the sheet's header row. Writes HEADERS if the sheet is empty;
  * otherwise leaves whatever is there alone, so your own labels win.
  */
 function ensureHeaders(sheet) {
+  var headers;
   if (sheet.getLastRow() === 0) {
-    var range = sheet.getRange(1, 1, 1, HEADERS.length);
-    range.setValues([HEADERS]).setFontWeight('bold');
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold');
     sheet.setFrozenRows(1);
-    return HEADERS;
+    headers = HEADERS.slice();
+  } else {
+    headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
   }
-  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
 
-  // The verification outcome needs somewhere to go. If the sheet has no
-  // column for it, one is added at the end — the 15 existing columns are
+  // The verification outcome and the click id need somewhere to go. Any that
+  // has no column is added at the END — the 15 existing columns are
   // untouched, and nothing else in this file depends on the count.
-  var hasVerified = headers.some(function (h) { return columnKey(h) === 'phone verified'; });
-  if (!hasVerified) {
-    var col = headers.length + 1;
-    sheet.getRange(1, col).setValue('Phone verified').setFontWeight('bold');
-    headers.push('Phone verified');
-  }
+  AUTO_COLUMNS.forEach(function (c) {
+    var present = headers.some(function (h) { return columnKey(h) === c[0]; });
+    if (!present) {
+      sheet.getRange(1, headers.length + 1).setValue(c[1]).setFontWeight('bold');
+      headers.push(c[1]);
+    }
+  });
   return headers;
 }
 
+/* ------------------------------------------------------------------ */
+/* Duplicate leads                                                     */
+/* ------------------------------------------------------------------ */
+
 /**
  * The browser may send the same lead twice (fetch plus the JSONP backup).
- * Held in the cache rather than in Script Properties: duplicates arrive within
- * seconds, and the properties store is where the Twilio credentials live —
- * thousands of evt_ rows made it unreadable.
+ * Event IDs are held in script properties rather than a sheet column, so the
+ * columns stay exactly as specified.
+ *
+ * All of them live in ONE property, as a { event_id: "<timestamp>:<row>" }
+ * map. They used to get a property each, which is a problem the dedupe itself
+ * never shows: the Script Properties screen turns read-only past 50
+ * properties, so a busy week silently takes away the only way to add or edit
+ * CRM_URL by hand. Run pruneEventIdProperties() once to fold any leftover
+ * evt_ keys in here.
+ *
+ * The row number rides along with the timestamp because handleVerifyAndSubmit
+ * needs it: a lead written unverified and then verified on a retry has to have
+ * its "Phone verified" cell corrected rather than being written twice. Values
+ * saved by the previous build are bare timestamps and still read correctly.
  */
+var EVENT_ID_PROP   = 'recent_event_ids';
+var EVENT_ID_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+// A single property value is capped at 9 KB. An id plus its stamp is about
+// 65 bytes, so this leaves room to spare; whichever limit bites first wins.
+var EVENT_ID_MAX    = 120;
+
+/** When an entry was written. Accepts both "<ts>:<row>" and a bare <ts>. */
+function eventIdWhen_(value) {
+  return Number(String(value).split(':')[0]) || 0;
+}
+
+/** The sheet row an entry was written to, or 0 if it predates the row stamp. */
+function eventIdRow_(value) {
+  var parts = String(value).split(':');
+  return parts.length > 1 ? (Number(parts[1]) || 0) : 0;
+}
+
+function readEventIds_() {
+  var raw = PropertiesService.getScriptProperties().getProperty(EVENT_ID_PROP);
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw) || {};
+  } catch (err) {
+    return {};   // corrupt value: treat as empty rather than refusing leads
+  }
+}
+
 function isDuplicate(data) {
   if (!data || !data.event_id) return false;
-  return CacheService.getScriptCache().get('evt_' + safeKey(data.event_id)) !== null;
+  return readEventIds_().hasOwnProperty(String(data.event_id));
 }
 
 function rememberEventId(eventId, row) {
   if (!eventId) return;
-  CacheService.getScriptCache().put('evt_' + safeKey(eventId), String(row || 1), 21600);
+
+  var seen = readEventIds_();
+  seen[String(eventId)] = String(Date.now()) + ':' + (Number(row) || 0);
+  PropertiesService.getScriptProperties()
+    .setProperty(EVENT_ID_PROP, JSON.stringify(trimEventIds_(seen)));
 }
 
 /** Row number an event_id was written to, or 0 if not known. */
 function rowForEventId(eventId) {
   if (!eventId) return 0;
-  var v = CacheService.getScriptCache().get('evt_' + safeKey(eventId));
-  return Number(v) > 1 ? Number(v) : 0;
+  var row = eventIdRow_(readEventIds_()[String(eventId)]);
+  return row > 1 ? row : 0;
 }
 
-/** Sets the "Phone verified" cell of an already-written row. */
+/**
+ * Sets the "Phone verified" cell of an already-written row.
+ *
+ * Used when a lead reached the sheet unverified and the visitor then passed
+ * the code on a retry carrying the same event_id. Writing the lead twice would
+ * be worse than either outcome, and leaving the cell wrong worse still.
+ */
 function markRowVerified(eventId, value) {
   try {
     var row = rowForEventId(eventId);
@@ -509,6 +685,140 @@ function markRowVerified(eventId, value) {
     return false;
   }
 }
+
+/** Drops anything past the TTL, then anything past the count cap, newest first. */
+function trimEventIds_(seen) {
+  var cutoff = Date.now() - EVENT_ID_TTL_MS;
+  Object.keys(seen).forEach(function (k) {
+    if (!(eventIdWhen_(seen[k]) >= cutoff)) delete seen[k];
+  });
+
+  var keys = Object.keys(seen);
+  if (keys.length > EVENT_ID_MAX) {
+    keys.sort(function (a, b) { return eventIdWhen_(seen[b]) - eventIdWhen_(seen[a]); })
+        .slice(EVENT_ID_MAX)
+        .forEach(function (k) { delete seen[k]; });
+  }
+  return seen;
+}
+
+/**
+ * ONE-OFF, run from the editor. Folds the old one-property-per-lead evt_ keys
+ * into the single map above and deletes them.
+ *
+ * This is what to run when Project Settings says "Your script has more than 50
+ * properties ... the above list is read-only" and there is no way to add
+ * CRM_URL or the TWILIO_* values. Afterwards, reload Project Settings and the
+ * fields are editable again. Safe to run more than once.
+ */
+function pruneEventIdProperties() {
+  var props = PropertiesService.getScriptProperties();
+  var all   = props.getProperties();
+  var seen  = readEventIds_();
+  var cutoff = Date.now() - EVENT_ID_TTL_MS;
+  var moved = 0, expired = 0;
+
+  Object.keys(all).forEach(function (k) {
+    if (k.indexOf('evt_') !== 0) return;
+    var when = Number(all[k]);
+    if (when >= cutoff) {
+      seen[k.slice(4)] = String(when) + ':0';   // 'evt_' is 4 characters
+      moved++;
+    } else {
+      expired++;
+    }
+    props.deleteProperty(k);
+  });
+
+  props.setProperty(EVENT_ID_PROP, JSON.stringify(trimEventIds_(seen)));
+
+  var left = Object.keys(props.getProperties());
+  Logger.log(
+    'Folded ' + moved + ' recent event id(s) into ' + EVENT_ID_PROP + ', ' +
+    'discarded ' + expired + ' expired.\n' +
+    'Script properties now: ' + left.length + ' (' + left.sort().join(', ') + ')\n' +
+    (left.length < 50
+      ? 'Under 50 — reload Project Settings and the fields are editable again.'
+      : 'STILL ' + left.length + ' — something other than evt_ keys is filling it.')
+  );
+}
+
+/**
+ * Sets CRM_URL and CRM_SECRET without the Project Settings screen, for when it
+ * is read-only and you would rather not wait. Paste the secret, run it once,
+ * then CLEAR THE LINE AGAIN AND SAVE — an editor file is not where a signing
+ * secret should live, which is the whole reason these are script properties.
+ *
+ * Prefer pruneEventIdProperties() and the normal screen if you can.
+ */
+function crmSetCredentials() {
+  var CRM_URL_    = 'https://crm.optimaltransnational.com.au/api/webhooks/lead/agency';
+  var CRM_SECRET_ = '';   // <-- paste, run, clear, save
+
+  if (!CRM_SECRET_) {
+    Logger.log('Paste the secret into CRM_SECRET_ first, then run this again.');
+    return;
+  }
+
+  PropertiesService.getScriptProperties()
+    .setProperties({ CRM_URL: CRM_URL_, CRM_SECRET: CRM_SECRET_ }, false);
+
+  Logger.log('Set. ' + JSON.stringify(crmStatus_()) +
+             '\nNow clear CRM_SECRET_ in this function and save.');
+}
+
+/**
+ * The TWILIO_* equivalent of crmSetCredentials(), for when Project Settings is
+ * read-only and you would rather not wait. Paste the three values, run it once,
+ * then CLEAR THE LINES AGAIN AND SAVE — an auth token is a password to a
+ * billable account, and an editor file is copied and shared in a way script
+ * properties are not.
+ *
+ * Prefer Project Settings -> Script Properties if that screen is editable. If
+ * it is read-only ("more than 50 properties"), run pruneEventIdProperties()
+ * first and it usually becomes editable again.
+ */
+function twilioSetCredentials() {
+  var ACCOUNT_SID_ = '';   // AC… Twilio console home  <-- paste, run, clear, save
+  var AUTH_TOKEN_  = '';   // the token beside it      <-- paste, run, clear, save
+  var SERVICE_SID_ = '';   // VA… Verify -> Services   <-- paste, run, clear, save
+
+  var missing = [];
+  if (!ACCOUNT_SID_) missing.push('ACCOUNT_SID_');
+  if (!AUTH_TOKEN_)  missing.push('AUTH_TOKEN_');
+  if (!SERVICE_SID_) missing.push('SERVICE_SID_');
+  if (missing.length) {
+    Logger.log('Paste ' + missing.join(', ') + ' into this function first, then run it again.');
+    return;
+  }
+
+  // Same prefix check twilioConfig() makes, done here so a swapped pair is
+  // caught before it is stored rather than at the first code request.
+  if (ACCOUNT_SID_.indexOf('AC') !== 0) {
+    Logger.log('ACCOUNT_SID_ must start with AC — this one starts with "' +
+               ACCOUNT_SID_.substring(0, 2) + '". Nothing stored.');
+    return;
+  }
+  if (SERVICE_SID_.indexOf('VA') !== 0) {
+    Logger.log('SERVICE_SID_ must start with VA (Verify -> Services) — this one starts with "' +
+               SERVICE_SID_.substring(0, 2) + '". That is a different kind of SID. Nothing stored.');
+    return;
+  }
+
+  PropertiesService.getScriptProperties().setProperties({
+    TWILIO_ACCOUNT_SID:        ACCOUNT_SID_,
+    TWILIO_AUTH_TOKEN:         AUTH_TOKEN_,
+    TWILIO_VERIFY_SERVICE_SID: SERVICE_SID_
+  }, false);
+
+  var cfg = twilioConfig();
+  Logger.log('Stored. twilioConfig(): ' + (cfg.ok ? 'ok' : cfg.error) +
+             '\nNow clear the three values in this function and save, then run testTwilioConfig().');
+}
+
+/* ------------------------------------------------------------------ */
+/* Request / response plumbing                                         */
+/* ------------------------------------------------------------------ */
 
 function parseBody(e) {
   if (!e) return {};
@@ -535,6 +845,7 @@ function jsonOut(obj) {
 }
 
 function jsonpOut(callback, obj) {
+  // Only allow a plain identifier as the callback name.
   var safe = String(callback).replace(/[^A-Za-z0-9_$]/g, '') || 'callback';
   return ContentService
     .createTextOutput(safe + '(' + JSON.stringify(obj) + ');')
@@ -546,9 +857,9 @@ function safeKey(value) {
   return String(value || '').replace(/[^A-Za-z0-9_-]/g, '').substring(0, 200);
 }
 
-/* ------------------------------------------------------------------ */
-/* Twilio Verify — credentials                                         */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
+/* SMS verification — Twilio Verify                                    */
+/* ================================================================== */
 
 /**
  * The Twilio auth token is a password to a billable account, so it lives in
@@ -590,6 +901,39 @@ function twilioConfig() {
   return { ok: true, sid: sid, token: token, service: service };
 }
 
+/**
+ * Asks Twilio whether the Verify service in TWILIO_VERIFY_SERVICE_SID exists
+ * and is reachable with these credentials. A GET, so it starts no verification
+ * and is never billed.
+ *
+ * This exists because Twilio answers 404 with code 20404 for BOTH "there is no
+ * pending verification for this number" and "there is no such Verify service".
+ * Same status, same code, and only the first is the visitor's problem. Telling
+ * a visitor their code is wrong when the service SID is wrong means every code
+ * fails forever and the screen blames them for it.
+ */
+function twilioServiceCheck(cfg) {
+  try {
+    var res = UrlFetchApp.fetch(
+      'https://verify.twilio.com/v2/Services/' + encodeURIComponent(cfg.service),
+      {
+        method: 'get',
+        headers: { Authorization: 'Basic ' + Utilities.base64Encode(cfg.sid + ':' + cfg.token) },
+        muteHttpExceptions: true
+      }
+    );
+    if (res.getResponseCode() !== 200) {
+      var body = {};
+      try { body = JSON.parse(res.getContentText() || '{}'); } catch (e) {}
+      return { ok: false, error: twilioMessage({ status: res.getResponseCode(), body: body }) };
+    }
+    var svc = JSON.parse(res.getContentText());
+    return { ok: true, name: svc.friendly_name, code_length: svc.code_length };
+  } catch (err) {
+    return { ok: false, error: 'Could not reach Twilio: ' + String(err) };
+  }
+}
+
 /** POSTs a form-encoded body to the Verify service and parses the reply. */
 function twilioPost(cfg, path, payload) {
   var url = 'https://verify.twilio.com/v2/Services/' + encodeURIComponent(cfg.service) + path;
@@ -628,19 +972,19 @@ var TWILIO_MESSAGES = {
 };
 
 function twilioMessage(res) {
-  var code = res.body && res.body.code;
+  var code = res && res.body && res.body.code;
   if (code && TWILIO_MESSAGES[code]) return TWILIO_MESSAGES[code];
 
-  if (res.status === 401 || res.status === 403) {
+  if (res && (res.status === 401 || res.status === 403)) {
     return 'Twilio rejected the credentials — check TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN.';
   }
   if (code === 20404) {
     return 'Twilio has no Verify service with that SID — check TWILIO_VERIFY_SERVICE_SID.';
   }
 
-  return (res.body && res.body.message)
+  return (res && res.body && res.body.message)
     ? 'Twilio: ' + res.body.message
-    : 'Twilio returned HTTP ' + res.status + '.';
+    : 'Twilio returned HTTP ' + (res && res.status) + '.';
 }
 
 /**
@@ -744,7 +1088,7 @@ function toE164Au(raw) {
   return toE164(raw);
 }
 
-/** +61412345678 -> +61 4•• ••• 678, for reading back on screen. */
+/** +61412345678 -> +614•••••678, for reading back on screen and in the log. */
 function maskPhone(e164) {
   var p = String(e164 || '');
   if (p.length < 5) return p;
@@ -880,8 +1224,17 @@ function sendCodeInner(data) {
 
     if (resend) {
       cancelled = twilioCancelPending(cfg, phone);
-      cache.remove(otpCacheKey('otp_done_', phone));   // old code is dead
-      cache.remove(otpCacheKey('otp_last_', phone));
+
+      // Both removes that used to sit here did nothing and hid that they did.
+      // The approval record is keyed otp_done_<phone>_<code>, so removing
+      // otp_done_<phone> never matched it, and otp_last_<phone> no longer
+      // exists — it was the key that approved wrong codes, and it is gone.
+      //
+      // Nothing needs clearing. A surviving otp_done_ entry names one exact
+      // code that this number genuinely answered, so replaying it inside the
+      // fifteen-minute window verifies a number that really did verify. Twilio
+      // has cancelled the old verification either way, so that code buys
+      // nothing new.
     }
 
     res = twilioPost(cfg, '/Verifications', { To: phone, Channel: 'sms' });
@@ -965,7 +1318,6 @@ function verifyCodeInner(data) {
 
   var cache    = CacheService.getScriptCache();
   var doneKey  = otpCacheKey('otp_done_', phone) + '_' + code;
-  var lastKey  = otpCacheKey('otp_last_', phone);
   var claimKey = otpCacheKey('otp_claim_', phone) + '_' + code;
 
   var approvedAnswer = function (token, replayed) {
@@ -999,12 +1351,17 @@ function verifyCodeInner(data) {
     // Another copy is mid-check. Do not ask Twilio; wait for its answer.
     if (cache.get(claimKey)) {
       if (locked) { lock.releaseLock(); locked = false; }
-      var waited = pollForApproval(cache, doneKey, lastKey, 15000);
+      var waited = pollForApproval(cache, doneKey, reqKey, 15000);
       if (waited) return approvedAnswer(waited, true);
+      // Its own code, not "expired". The sibling copy reached a verdict and it
+      // was not an approval — usually a wrong code. Reporting that as "expired"
+      // hid a wrong code behind a Twilio-side-sounding word, and the sheet then
+      // could not be read to tell the two apart either.
       return rememberAnswer(reqKey, {
         ok: false,
-        code: 'expired',
-        error: 'That code has expired. Please request a new one.',
+        code: 'check_in_flight',
+        error: 'That code could not be confirmed. Please check the message and try again, ' +
+               'or request a new code.',
         note: 'another copy of this check was in flight and did not approve',
         request_id: data.request_id
       });
@@ -1029,11 +1386,19 @@ function verifyCodeInner(data) {
     // turns a correct code into a 404 for the copy that comes next.
     var token = mintOtpToken(phone);
 
-    res = twilioPost(cfg, '/VerificationChecks', { To: phone, Code: code });
+    // SINGULAR. Twilio Verify v2 creates with /Verifications (plural) and
+    // checks with /VerificationCheck (singular) — the one inconsistency in the
+    // whole API, and the reason every code ever typed into this form failed.
+    // The plural spelling is not an endpoint, so Twilio answered 404/20404:
+    // "The requested resource /v2/Services/VA…/VerificationChecks was not
+    // found". The 404 branch below reads a 404 as "that verification is gone"
+    // and told the visitor their code was wrong — right codes included, every
+    // time, while the send half worked perfectly because /Verifications IS the
+    // correct name. Changing this word is the fix.
+    res = twilioPost(cfg, '/VerificationCheck', { To: phone, Code: code });
 
     if (res.status >= 200 && res.status < 300) {
       if (res.body.status === 'approved') {
-        try { cache.put(lastKey, token, OTP_REPLAY_TTL_SECONDS); } catch (e1) {}
         try { cache.put(doneKey, token, OTP_REPLAY_TTL_SECONDS); } catch (e2) {}
         try { cache.remove(otpCacheKey('otp_a_', phone)); } catch (e3) {}
         var ok = approvedAnswer(token, false);
@@ -1055,19 +1420,49 @@ function verifyCodeInner(data) {
     // or past its ten minutes. If this number was approved moments ago (or
     // is being approved right now by the other copy), the visitor is verified.
     if (res.status === 404) {
-      var held = cache.get(lastKey) || pollForApproval(cache, doneKey, lastKey, 4000);
+      var held = cache.get(doneKey) || pollForApproval(cache, doneKey, reqKey, 8000);
       if (held) {
         try { cache.put(doneKey, held, OTP_REPLAY_TTL_SECONDS); } catch (e4) {}
         var rec = approvedAnswer(held, true);
         rec._twilio = res;
         return rec;
       }
+      // Twilio returns one 404 for four different things: expired, already
+      // approved, cancelled by a resend, and "too many wrong guesses, this
+      // verification is finished". It does not say which, so neither can this
+      // message. Calling it "expired" told a visitor who had just mistyped
+      // six digits that their code had timed out, which sent them off to
+      // request a new one instead of correcting the typo in front of them.
+      // Before the visitor is told their code is wrong, find out whether the
+      // service that would have checked it exists at all. 20404 covers both,
+      // and a bad TWILIO_VERIFY_SERVICE_SID fails EVERY code — right or wrong,
+      // forever — while the screen says "that code isn't valid". That is a
+      // setup fault, so it is reported as one and the lead still fails open.
+      var svc = twilioServiceCheck(cfg);
+      if (!svc.ok) {
+        return rememberAnswer(reqKey, {
+          ok: false,
+          code: 'twilio_error',
+          error: svc.error,
+          service_unreachable: true,
+          twilio_status: res.status,
+          twilio_code: (res.body && res.body.code) || null,
+          request_id: data.request_id,
+          _twilio: res
+        });
+      }
+
       return rememberAnswer(reqKey, {
         ok: false,
         code: 'expired',
-        error: 'That code has expired. Please request a new one.',
+        error: "That code isn't valid. It may have expired or already been used — " +
+               'please request a new one.',
         twilio_status: res.status,
         twilio_code: (res.body && res.body.code) || null,
+        // Twilio's own words, kept so the OTP Log and the console say WHICH
+        // resource was missing. Discarding this is what made every 404 look
+        // like the same problem.
+        twilio_message: (res.body && res.body.message) || null,
         request_id: data.request_id,
         _twilio: res
       });
@@ -1090,11 +1485,37 @@ function verifyCodeInner(data) {
 }
 
 /** Waits for another execution's approval to land in the cache. */
-function pollForApproval(cache, doneKey, lastKey, maxMs) {
+/**
+ * Only doneKey is consulted, and doneKey carries the code in its name.
+ *
+ * This used to fall back to otp_last_<phone>, which is keyed on the NUMBER
+ * alone and holds a token for fifteen minutes after any successful check. A
+ * 404 for a completely different code then read that token and approved it —
+ * so once a number had verified once, every wrong code it sent for the next
+ * quarter of an hour came back verified. Nothing may approve a code except a
+ * record naming that exact code.
+ */
+function pollForApproval(cache, doneKey, reqKey, maxMs) {
   var until = Date.now() + maxMs;
   while (Date.now() < until) {
-    var hit = cache.get(doneKey) || cache.get(lastKey);
+    // Written by the sibling the moment Twilio approved: phone + these exact
+    // six digits.
+    var hit = cache.get(doneKey);
     if (hit) return hit;
+
+    // The same verdict, recorded under this submit's own request_id. Both
+    // copies of a submit carry one request_id, so this is the sibling's
+    // answer to THIS question — it cannot carry a verdict for another code,
+    // which is the whole difference between it and the otp_last_<phone> key
+    // that used to approve anything. Checked as well as doneKey because the
+    // two writes are separate cache entries and the sibling's may land here
+    // first; giving up while its approval sits in the other one is exactly
+    // how a correct code came back "not valid".
+    var answer = recallAnswer(reqKey);
+    if (answer && answer.ok && answer.verified && answer.otp_token) {
+      return answer.otp_token;
+    }
+
     Utilities.sleep(400);
   }
   return '';
@@ -1106,16 +1527,46 @@ function pollForApproval(cache, doneKey, lastKey, maxMs) {
 
 /**
  * The form's real submit. The payload is the whole lead plus the six digits.
- * The code is checked, and if the number is confirmed the row is written in
- * the same execution — the browser never has to make a second call carrying a
- * token, so there is no gap in which a verified lead can be lost.
+ * The code is checked, and if the number is confirmed the row is written and
+ * the CRM payload queued in the same execution — the browser never has to
+ * make a second call carrying a token, so there is no gap in which a verified
+ * lead can be lost.
  *
  * Outcomes, in order:
- *   verified     -> row written, "Phone verified" = Yes (SMS)
- *   wrong code   -> refused, visitor asked to re-check the message
- *   Twilio-side failure and OTP_FAIL_OPEN -> row written, marked "No — reason"
+ *   verified     -> row written, "Phone verified" = Verified (SMS), CRM queued
+ *   wrong code   -> refused, nothing written, visitor re-checks the message
+ *   Twilio-side failure and OTP_FAIL_OPEN -> row written and CRM queued,
+ *                   both marked "Not verified — <reason>"
  *   Twilio-side failure otherwise -> refused
  */
+/**
+ * The short status the "Phone verified" cell carries when a lead is written
+ * without a confirmed number.
+ *
+ * The cell is read down a column beside fourteen others, so it gets a label,
+ * not a sentence. check.error is written for the visitor standing at the code
+ * step ("Please request a new one") and means nothing to someone reading the
+ * sheet a day later — the full text, the Twilio HTTP status and the Twilio
+ * error code are already on the OTP Log tab, which is where the diagnosis
+ * belongs.
+ */
+var OTP_SHEET_STATUS = {
+  expired:         'Not verified (code expired)',
+  check_in_flight: 'Not verified (code not confirmed)',
+  incorrect:      'Not verified (wrong code)',
+  rate_limited:   'Not verified (too many attempts)',
+  bad_code:       'Not verified (no code entered)',
+  bad_number:     'Not verified (invalid number)',
+  not_configured: 'Not verified (SMS not configured)',
+  twilio_error:   'Not verified (SMS service error)',
+  unreachable:    'Not verified (SMS service unreachable)'
+};
+
+function otpSheetStatus(check) {
+  var code = (check && check.code) || '';
+  return OTP_SHEET_STATUS[code] || ('Not verified (' + (code || 'unknown') + ')');
+}
+
 function handleVerifyAndSubmit(data) {
   data = data || {};
 
@@ -1124,7 +1575,28 @@ function handleVerifyAndSubmit(data) {
   delete check._twilio;
 
   // These are the visitor's to fix; a row is not written for them.
-  var visitorFault = { incorrect: 1, rate_limited: 1, bad_code: 1, bad_number: 1 };
+  // Faults the visitor can fix by looking at their phone. None of these writes
+  // a row: the whole point of the code step is that an unanswered number does
+  // not become a lead.
+  //
+  // "expired" belongs here, not with the Twilio-side failures. It is Twilio
+  // ANSWERING — 404, the verification is gone: approved already, cancelled by
+  // a resend, or past its ten minutes. A dead code is the visitor's to fix by
+  // requesting a new one, exactly like a wrong one. Filed on the fail-open
+  // side it did the opposite: every wrong code fell through to "write the lead
+  // anyway", which is how unverified numbers reached the sheet.
+  //
+  // Genuine infrastructure failures — twilio_error, not_configured,
+  // unreachable — stay out of this list and still fail open, so an outage
+  // never costs a lead.
+  var visitorFault = {
+    incorrect: 1,
+    rate_limited: 1,
+    bad_code: 1,
+    bad_number: 1,
+    expired: 1,
+    check_in_flight: 1
+  };
 
   var verified = !!(check.ok && check.verified);
   var failOpen = !verified && OTP_FAIL_OPEN && !visitorFault[check.code];
@@ -1133,13 +1605,13 @@ function handleVerifyAndSubmit(data) {
     return check;
   }
 
+  // The six digits never travel further than this function: not into the
+  // sheet, not into the CRM outbox, not into the payload the CRM receives.
   var lead = {};
   Object.keys(data).forEach(function (k) {
     if (k !== 'action' && k !== 'code' && k !== 'request_id') lead[k] = data[k];
   });
-  lead.otp_verified = verified
-    ? 'Verified (SMS)'
-    : 'Not verified — ' + (check.code || 'twilio error') + (check.error ? ': ' + check.error : '');
+  lead.otp_verified = verified ? 'Verified (SMS)' : otpSheetStatus(check);
   if (verified) lead.otp_token = check.otp_token;
 
   var written = handleLead(lead, { skipGate: true });
@@ -1176,7 +1648,7 @@ function handleVerifyAndSubmit(data) {
  * checked". It is the number and an expiry, signed with a secret only this
  * script holds — so nothing has to be remembered to verify it later.
  *
- * The previous build kept tokens in CacheService, which caps at six hours and
+ * An earlier build kept tokens in CacheService, which caps at six hours and
  * evicts under pressure. A lead stashed in the browser after a failed write is
  * retried on the next page load, and with a cached token that retry arrived
  * holding something the script no longer recognised — a real, verified lead
@@ -1255,14 +1727,15 @@ function checkOtpGate(data) {
   };
 }
 
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
 /* Checks to run from the editor                                       */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
 
 /**
  * Everything that costs nothing, in one run: the credentials, the Verify
- * service, the sheet, the header mapping, the tokens and the number
- * rewriting. Run this first. It sends no message and writes no row.
+ * service, the sheet, the header mapping, the tokens, the number rewriting
+ * and the CRM's configuration. Run this first after deploying.
+ * It sends no message and writes no row.
  */
 function testEverything() {
   testTwilioConfig();
@@ -1272,6 +1745,9 @@ function testEverything() {
   testTokens();
   Logger.log('---');
   testPhoneNormalising();
+  Logger.log('---');
+  Logger.log('CRM: ' + JSON.stringify(crmStatus_()));
+  Logger.log('Build: ' + SCRIPT_BUILD + '   Sheet: ' + SHEET_ID);
 }
 
 /**
@@ -1283,6 +1759,8 @@ function testTwilioConfig() {
   var cfg = twilioConfig();
   if (!cfg.ok) {
     Logger.log('NOT CONFIGURED: ' + cfg.error);
+    Logger.log('Until this is fixed, every lead is written WITHOUT verification ' +
+               '(checkOtpGate lets them through) and the code step cannot send.');
     return;
   }
 
@@ -1334,8 +1812,10 @@ function testHeaderMapping() {
                (ok ? '' : '   <-- UNRECOGNISED, will always be blank'));
   });
 
+  // The reverse question: something this script can fill that has no column.
   var missing = Object.keys(known).filter(function (k) {
-    if (k === 'solar' || k === 'phone verified') return false;   // optional columns
+    if (k === 'solar') return false;            // legacy 9-column key
+    if (k === 'phone verified') return false;   // ensureHeaders adds it on its own
     return headers.map(columnKey).indexOf(k) === -1;
   });
 
@@ -1362,8 +1842,8 @@ function testTokens() {
 function testPhoneNormalising() {
   [
     '0412 345 678', '0412345678', '61412345678', '0061412345678',
-    '+61412345678', '+61 412 345 678', '+91 85956 84896', '+918595684896',
-    '02 9876 5432', '412345678', '041234567', 'not a number', ''
+    '+61412345678', '+61 412 345 678', '02 9876 5432',
+    '412345678', '041234567', 'not a number', ''
   ].forEach(function (raw) {
     Logger.log((raw || '(empty)') + '  ->  ' + (toE164(raw) || 'REJECTED'));
   });
@@ -1381,6 +1861,7 @@ function testInsert() {
     last_name: 'Lead',
     phone_number: '+61412345678',
     otp_token: mintOtpToken('+61412345678'),
+    otp_verified: 'Verified (SMS)',
     street_address: '12 Smith Street',
     suburb_city: 'Bondi',
     postcode: '2026',
@@ -1392,7 +1873,8 @@ function testInsert() {
     roof_type: 'Tin',
     home_age: '10 - 20 Years',
     shading_issues: 'No Shading Issues',
-    bill_size: '$600 - $900'
+    bill_size: '$600 - $900',
+    clid: 'f919bbfb-bb6e-440a-aa5e-76c084c0ea32'
   });
 }
 
@@ -1404,6 +1886,7 @@ function testNoExistingSolar() {
     last_name: 'NoSolar',
     phone_number: '+61498765432',
     otp_token: mintOtpToken('+61498765432'),
+    otp_verified: 'Verified (SMS)',
     street_address: '8 Jones Road',
     suburb_city: 'Manly',
     postcode: '2095',
@@ -1430,7 +1913,11 @@ function testRenterReferral() {
   });
 }
 
-/** Proves the gate: a lead with a number but no token must be refused. */
+/**
+ * Proves the gate: a lead with a number but no token must be refused.
+ * Only meaningful once the TWILIO_* properties are set — without them the
+ * gate deliberately lets everything through, and this logs that instead.
+ */
 function testGateRejectsUnverified() {
   var res = handleLead({
     event_id: 'test-gate-' + Date.now(),
@@ -1438,6 +1925,12 @@ function testGateRejectsUnverified() {
     phone_number: '+61412345678'
   });
   Logger.log(JSON.stringify(res));
+
+  if (!twilioConfig().ok) {
+    Logger.log('Twilio is not configured, so the gate is open by design. ' +
+               'A row WAS written. Set the three properties and run this again.');
+    return;
+  }
   Logger.log(res.ok ? 'UNEXPECTED — the gate let an unverified lead through.'
                     : 'Correct — refused: ' + res.error);
 }
@@ -1453,14 +1946,146 @@ function logLead(payload) {
 /**
  * The handset the two checks below text. Full international form, with the
  * country code and no trunk zero — the same thing Twilio is handed.
+ * Left blank on purpose: fill it with a phone you can actually read.
  */
-var TEST_PHONE = '+918595684896';
+var TEST_PHONE = '';        // e.g. '+61412345678'
 
 /** The six digits that arrived. Filled in between testSendCode and testVerifyCode. */
 var TEST_CODE = '000000';
 
 /** Texts a real code to TEST_PHONE. Costs one verification. */
+/**
+ * Sends a code and then immediately asks Twilio what verification now exists
+ * for that number. Run this when a code the visitor swears is correct comes
+ * back "not valid".
+ *
+ * The check path can only ever report a 404 as "that code is gone" — it cannot
+ * see WHY. This looks at the verification itself: whether the send created one
+ * at all, whether it is still pending, and how long it has left. Everything a
+ * correct code needs in order to pass is visible in one place:
+ *
+ *   status "pending", valid false   normal, waiting for the six digits
+ *   status "approved"               already used — a second check 404s
+ *   status "canceled"               a resend killed it; the old code is dead
+ *   nothing found (404)             the send did NOT create a verification,
+ *                                   so no code could ever have worked
+ *
+ * Costs one verification, same as testSendCode. Reads TEST_PHONE.
+ */
+function testSendAndInspect() {
+  if (!TEST_PHONE) {
+    Logger.log('Set TEST_PHONE to a handset you can read, in +61… form, then run this again.');
+    return;
+  }
+
+  var cfg = twilioConfig();
+  if (!cfg.ok) { Logger.log('NOT CONFIGURED: ' + cfg.error); return; }
+
+  var svc = twilioServiceCheck(cfg);
+  Logger.log(svc.ok
+    ? 'Verify service "' + svc.name + '" reachable, ' + svc.code_length + '-digit codes.'
+    : 'SERVICE PROBLEM: ' + svc.error);
+  if (!svc.ok) return;
+
+  var sent = handleSendCode({ phone_number: TEST_PHONE, request_id: 'inspect-' + Date.now() });
+  Logger.log('send -> ' + JSON.stringify(sent));
+  if (!sent.ok) { Logger.log('Send failed: ' + sent.error + '\n' + testSendHint(sent)); return; }
+
+  var phone = toE164(TEST_PHONE);
+  var res = UrlFetchApp.fetch(
+    'https://verify.twilio.com/v2/Services/' + encodeURIComponent(cfg.service) +
+      '/Verifications/' + encodeURIComponent(phone),
+    {
+      method: 'get',
+      headers: { Authorization: 'Basic ' + Utilities.base64Encode(cfg.sid + ':' + cfg.token) },
+      muteHttpExceptions: true
+    }
+  );
+
+  if (res.getResponseCode() !== 200) {
+    Logger.log('NO VERIFICATION EXISTS (HTTP ' + res.getResponseCode() + '): ' + res.getContentText());
+    Logger.log('The send reported success but Twilio holds nothing for ' + maskPhone(phone) + '. ' +
+               'No code can pass while this is true — this is the bug, and it is on the send side.');
+    return;
+  }
+
+  var v = JSON.parse(res.getContentText());
+  Logger.log('VERIFICATION EXISTS:');
+  Logger.log('  status            ' + v.status);
+  Logger.log('  valid             ' + v.valid);
+  Logger.log('  channel           ' + v.channel);
+  Logger.log('  created           ' + v.date_created);
+  Logger.log('  send attempts     ' + (v.send_code_attempts ? v.send_code_attempts.length : '?'));
+  Logger.log(v.status === 'pending'
+    ? 'Healthy. Put the six digits into TEST_CODE and run testVerifyCode within ten minutes.'
+    : 'NOT pending — a code checked against this now returns 404, which the form reports as ' +
+      '"that code isn\'t valid". That is the bug, and this status is why.');
+}
+
+/**
+ * Ground truth, with nothing in the way. Asks Twilio two questions back to
+ * back and prints both answers verbatim:
+ *
+ *   1. GET  /Verifications/<To>       does a verification exist right now?
+ *   2. POST /VerificationCheck        what happens when TEST_CODE is checked?
+ *
+ * Every other function here turns Twilio's reply into something a visitor can
+ * read, which is the right thing to do on a form and the wrong thing to do
+ * when the reply itself is what is in question. A 404 from the check path
+ * arrives as "that code isn't valid" with Twilio's own `message` and
+ * `more_info` discarded — and those two fields say which resource was missing,
+ * which is the whole question.
+ *
+ * Sends no SMS. Reads TEST_PHONE and TEST_CODE.
+ */
+function testRawCheck() {
+  if (!TEST_PHONE) { Logger.log('Set TEST_PHONE first.'); return; }
+
+  var cfg = twilioConfig();
+  if (!cfg.ok) { Logger.log('NOT CONFIGURED: ' + cfg.error); return; }
+
+  var phone = toE164(TEST_PHONE);
+  var auth  = { Authorization: 'Basic ' + Utilities.base64Encode(cfg.sid + ':' + cfg.token) };
+  var base  = 'https://verify.twilio.com/v2/Services/' + encodeURIComponent(cfg.service);
+
+  Logger.log('Service : ' + cfg.service);
+  Logger.log('To      : ' + phone + '   Code: ' + TEST_CODE);
+  Logger.log('');
+
+  // 1 — is there a verification to check against at this instant?
+  var look = UrlFetchApp.fetch(base + '/Verifications/' + encodeURIComponent(phone),
+    { method: 'get', headers: auth, muteHttpExceptions: true });
+  Logger.log('--- GET /Verifications/' + phone + ' ---');
+  Logger.log('HTTP ' + look.getResponseCode());
+  Logger.log(look.getContentText());
+  Logger.log('');
+
+  // 2 — the exact call the form makes, with the reply untouched.
+  var check = UrlFetchApp.fetch(base + '/VerificationCheck',
+    { method: 'post', payload: { To: phone, Code: String(TEST_CODE) },
+      headers: auth, muteHttpExceptions: true });
+  Logger.log('--- POST /VerificationCheck ---');
+  Logger.log('HTTP ' + check.getResponseCode());
+  Logger.log(check.getContentText());
+  Logger.log('');
+
+  if (look.getResponseCode() !== 200 && check.getResponseCode() === 404) {
+    Logger.log('READ: no verification existed even before the check ran, so the 404 is ' +
+               'about the VERIFICATION, not the code. Whatever removed it happened ' +
+               'between the send and now.');
+  } else if (look.getResponseCode() === 200 && check.getResponseCode() === 404) {
+    Logger.log('READ: a verification existed a moment ago and the check still 404s. ' +
+               'The `message` field above names the resource Twilio could not find — ' +
+               'that is the answer.');
+  }
+}
+
 function testSendCode() {
+  if (!TEST_PHONE) {
+    Logger.log('Set TEST_PHONE to a handset you can read, in +61… form, then run this again.');
+    return;
+  }
+
   var res = handleSendCode({ phone_number: TEST_PHONE, request_id: 'manual-' + Date.now() });
   Logger.log(JSON.stringify(res, null, 2));
 
@@ -1518,8 +2143,9 @@ function testVerifyCode() {
 }
 
 /**
- * The regression test for the bug this build fixes: the same request sent
- * twice must answer the same way twice, and must not reach Twilio twice.
+ * The regression test for the bug this design exists to prevent: the same
+ * request sent twice must answer the same way twice, and must not reach
+ * Twilio twice.
  *
  * Run testSendCode, put the code in TEST_CODE, then run this instead of
  * testVerifyCode. Both lines must read verified, and the second must be
@@ -1539,4 +2165,360 @@ function testDoubleVerify() {
   } else {
     Logger.log('FAIL — the retry did not match. This is the "expired" bug.');
   }
+}
+
+/* ================================================================== */
+/* CRM forwarding                                                      */
+/* ================================================================== */
+/*
+ * The CRM answers:
+ *   202  accepted                        -> sent
+ *   409  it already has this event_id    -> sent (a retry that had landed)
+ *   400  it cannot use this lead, e.g. a non-Australian postcode
+ *                                        -> rejected, never retried
+ *   401  bad signature / wrong secret    -> retried: fix CRM_SECRET and it recovers
+ *   408  clock skew                      -> retried
+ *   anything else, or no answer          -> retried, up to CRM_MAX_ATTEMPTS
+ *
+ * The request is signed over the exact bytes sent:
+ *   X-OT-Timestamp: <unix seconds>
+ *   X-OT-Signature: sha256=<hex HMAC-SHA256(secret, "<timestamp>.<body>")>
+ *
+ * Since the OTP build, every forwarded payload also carries otp_verified —
+ * "Verified (SMS)" or "Not verified — <reason>" — so the CRM can tell a
+ * confirmed handset from one Twilio could not reach. The six digits and the
+ * internal verification token are stripped and never leave this script.
+ */
+
+var CRM_OUTBOX_SHEET  = 'CRM outbox';
+var CRM_MAX_ATTEMPTS  = 30;   // one a minute, backing off; ~a day of retrying
+var CRM_BATCH         = 40;   // per trigger run; Apps Script runs are time-limited
+var CRM_OUTBOX_HEADERS = [
+  'Queued at', 'event_id', 'Lead', 'Status', 'CRM reference',
+  'Attempts', 'Last tried', 'Last response', 'Payload'
+];
+// 1-based column numbers of the above.
+var CRM_COL = {
+  queuedAt: 1, eventId: 2, lead: 3, status: 4, reference: 5,
+  attempts: 6, lastTried: 7, response: 8, payload: 9
+};
+
+function crmOutbox_() {
+  var ss = getSpreadsheet();
+  var sheet = ss.getSheetByName(CRM_OUTBOX_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(CRM_OUTBOX_SHEET);
+    sheet.getRange(1, 1, 1, CRM_OUTBOX_HEADERS.length).setValues([CRM_OUTBOX_HEADERS]);
+    sheet.getRange(1, 1, 1, CRM_OUTBOX_HEADERS.length).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+/**
+ * Queues the form payload for the CRM. Called inside handleLead's lock, after
+ * the sheet row is written. Swallows its own errors: the sheet is the thing
+ * the visitor is waiting on, and it has already succeeded.
+ */
+function crmEnqueue_(data) {
+  try {
+    crmMarkLive_();
+
+    var who = [data.first_name, data.last_name].filter(Boolean).join(' ');
+
+    // A renter referral carries no customer: the tenant is told we cannot
+    // assess in their name and may leave a landlord's name and number. The
+    // landlord never agreed to be contacted, so it is not sent as a lead —
+    // Optimal Transnational decides by hand whether to follow one up.
+    var status = data.lead_type === 'renter referral'
+      ? 'not sent: renter referral'
+      : 'pending';
+
+    // The outbox is a spreadsheet tab that people read. A one-time code and a
+    // verification token are credentials, however short-lived, and neither is
+    // any use to the CRM — so neither is written down.
+    var payload = {};
+    Object.keys(data).forEach(function (k) {
+      if (k === 'code' || k === 'otp_token' || k === 'action' || k === 'request_id') return;
+      payload[k] = data[k];
+    });
+
+    crmOutbox_().appendRow([
+      Utilities.formatDate(new Date(), TIMEZONE, DATE_FORMAT),
+      String(data.event_id || ''),
+      who || String(data.landlord_name || ''),
+      status,
+      '',
+      0,
+      '',
+      '',
+      JSON.stringify(payload)
+    ]);
+  } catch (err) {
+    console.error('CRM enqueue failed: ' + err);
+  }
+}
+
+/**
+ * The moment live forwarding began: whichever came first, crmSetup() or the
+ * first lead queued by this version. Rows dated before it were never queued
+ * live, and crmBackfill uses it so it never re-sends one that was — under a
+ * different id, which the CRM would read as the customer enquiring twice.
+ */
+function crmMarkLive_() {
+  var props = PropertiesService.getScriptProperties();
+  if (!props.getProperty('CRM_LIVE_SINCE')) props.setProperty('CRM_LIVE_SINCE', String(Date.now()));
+}
+
+/** Trigger target, every minute. Sends whatever is due. */
+function crmFlush() {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) return;   // a lead or an OTP check holds it; next minute will do
+
+  var due = [];
+  var sheet;
+  try {
+    sheet = crmOutbox_();
+    var last = sheet.getLastRow();
+    if (last < 2) return;
+
+    var rows = sheet.getRange(2, 1, last - 1, CRM_OUTBOX_HEADERS.length).getValues();
+    var now = Date.now();
+    for (var i = 0; i < rows.length && due.length < CRM_BATCH; i++) {
+      var r = rows[i];
+      var status = String(r[CRM_COL.status - 1]);
+      var attempts = Number(r[CRM_COL.attempts - 1]) || 0;
+      if (status !== 'pending' && status.indexOf('retrying') !== 0) continue;
+      if (attempts >= CRM_MAX_ATTEMPTS) continue;
+
+      // Back off: 1, 2, 4 ... minutes, capped at an hour.
+      var lastTried = r[CRM_COL.lastTried - 1];
+      var wait = Math.min(60, Math.pow(2, Math.max(attempts - 1, 0))) * 60 * 1000;
+      if (attempts > 0 && lastTried instanceof Date && now - lastTried.getTime() < wait) continue;
+
+      due.push({ row: i + 2, attempts: attempts, body: String(r[CRM_COL.payload - 1]) });
+    }
+  } finally {
+    // Sending happens OUTSIDE the lock, so a slow CRM never holds up a visitor.
+    lock.releaseLock();
+  }
+
+  due.forEach(function (item) {
+    var result = crmSend_(item.body);
+    var attempts = item.attempts + 1;
+    var status = result.status;
+    if (status === 'retrying' && attempts >= CRM_MAX_ATTEMPTS) status = 'failed: gave up';
+
+    sheet.getRange(item.row, CRM_COL.status, 1, 5).setValues([[
+      status === 'retrying' ? 'retrying (' + result.code + ')' : status,
+      result.reference || '',
+      attempts,
+      new Date(),
+      String(result.detail || '').slice(0, 500)
+    ]]);
+  });
+}
+
+/** Signs and POSTs one payload. Returns { status, code, reference, detail }. */
+function crmSend_(body) {
+  var props  = PropertiesService.getScriptProperties();
+  var url    = props.getProperty('CRM_URL');
+  var secret = props.getProperty('CRM_SECRET');
+  if (!url || !secret) {
+    return { status: 'retrying', code: 'not configured', detail: 'CRM_URL or CRM_SECRET script property is missing' };
+  }
+
+  var ts = String(Math.floor(Date.now() / 1000));
+  // UTF-8 explicitly, so a name with an accent signs the same bytes the CRM checks.
+  var sig = Utilities.computeHmacSha256Signature(ts + '.' + body, secret, Utilities.Charset.UTF_8)
+    .map(function (b) { return ('0' + (b & 0xff).toString(16)).slice(-2); })
+    .join('');
+
+  var res;
+  try {
+    res = UrlFetchApp.fetch(url, {
+      method: 'post',
+      contentType: 'application/json; charset=utf-8',
+      payload: body,
+      headers: { 'X-OT-Timestamp': ts, 'X-OT-Signature': 'sha256=' + sig },
+      muteHttpExceptions: true,
+      followRedirects: false
+    });
+  } catch (err) {
+    return { status: 'retrying', code: 'network', detail: String(err) };
+  }
+
+  var code = res.getResponseCode();
+  var text = res.getContentText();
+  var out = {};
+  try { out = JSON.parse(text); } catch (e) { /* not JSON */ }
+
+  if (code === 202 && out.ok === false) {
+    return { status: 'retrying', code: code, detail: text };
+  }
+  if (code === 202 || code === 409) {
+    return { status: 'sent', code: code, reference: out.reference || '', detail: text };
+  }
+  if (code === 400) {
+    return { status: 'rejected: ' + (out.detail || out.error || 'invalid'), code: code, detail: text };
+  }
+  return { status: 'retrying', code: code, detail: text };
+}
+
+/** For ?ping=1. Says whether forwarding is configured and how far behind it is. */
+function crmStatus_() {
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var sheet = crmOutbox_();
+    var last = sheet.getLastRow();
+    var counts = { pending: 0, retrying: 0, sent: 0, rejected: 0, other: 0 };
+    if (last >= 2) {
+      sheet.getRange(2, CRM_COL.status, last - 1, 1).getValues().forEach(function (r) {
+        var s = String(r[0]);
+        if (s === 'pending') counts.pending++;
+        else if (s.indexOf('retrying') === 0) counts.retrying++;
+        else if (s === 'sent') counts.sent++;
+        else if (s.indexOf('rejected') === 0) counts.rejected++;
+        else counts.other++;
+      });
+    }
+    return {
+      configured: !!(props.getProperty('CRM_URL') && props.getProperty('CRM_SECRET')),
+      trigger: ScriptApp.getProjectTriggers().some(function (t) {
+        return t.getHandlerFunction() === 'crmFlush';
+      }),
+      outbox: counts
+    };
+  } catch (err) {
+    return { error: String(err) };
+  }
+}
+
+/**
+ * Run ONCE from the editor after setting the two script properties. Creates
+ * the outbox tab and the every-minute trigger (removing any duplicate), then
+ * sends one clearly-labelled test lead and logs what the CRM said.
+ */
+function crmSetup() {
+  crmOutbox_();
+  crmMarkLive_();
+
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'crmFlush') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('crmFlush').timeBased().everyMinutes(1).create();
+
+  var tag = Utilities.getUuid().replace(/-/g, '').slice(0, 8);
+  var result = crmSend_(JSON.stringify({
+    event_id: 'setup-test-' + tag,
+    submitted_at: new Date().toISOString(),
+    lead_type: 'residential solar',
+    first_name: 'CRM',
+    last_name: 'Setup Test ' + tag,
+    email_address: 'crm.setup.' + tag + '@example.com',
+    phone_number: '+61400000000',
+    street_address: '1 Test Street',
+    suburb_city: 'Preston',
+    postcode: '3072',
+    homeowner: 'Own',
+    product_type: 'Solar Only',
+    bill_size: '$300 - $600',
+    otp_verified: 'Not verified — setup test',
+    utm_source: 'setup-test'
+  }));
+  Logger.log(JSON.stringify(crmStatus_()));
+  Logger.log('Test send: ' + JSON.stringify(result));
+}
+
+/**
+ * ONE-OFF: queue the leads already in the main sheet, from before forwarding
+ * existed. Run it once, from the editor, only when Optimal Transnational asks.
+ *
+ * Those rows only kept what the sheet shows — "Name" and "Property address"
+ * joined into one cell, no event_id, no UTMs — so the payload is rebuilt from
+ * the columns: first word of the name is the first name, the last part of the
+ * address is the postcode. The event_id is derived from the row's date, phone
+ * and email, so running this twice queues nothing new that the CRM will not
+ * recognise (it answers 409). Rows already in the outbox are skipped, and so
+ * is every row dated after crmSetup() ran — those went out live already.
+ */
+function crmBackfill() {
+  var sheet   = getSheet();
+  var headers = ensureHeaders(sheet);
+  var last    = sheet.getLastRow();
+  if (last < 2) return;
+
+  var idx = {};
+  headers.forEach(function (h, i) { idx[columnKey(h)] = i; });
+  var cell = function (row, key) {
+    return idx.hasOwnProperty(key) ? row[idx[key]] : '';
+  };
+
+  var outbox = crmOutbox_();
+  var known = {};
+  if (outbox.getLastRow() >= 2) {
+    outbox.getRange(2, CRM_COL.eventId, outbox.getLastRow() - 1, 1).getValues()
+      .forEach(function (r) { known[String(r[0])] = true; });
+  }
+
+  var liveSince = Number(PropertiesService.getScriptProperties().getProperty('CRM_LIVE_SINCE'));
+  if (!liveSince) {
+    Logger.log('Run crmSetup() first: backfill needs to know when live forwarding started.');
+    return;
+  }
+
+  var queued = 0, skipped = 0;
+  sheet.getRange(2, 1, last - 1, headers.length).getValues().forEach(function (row) {
+    var phone = String(cell(row, 'phone number') || '').replace(/^'/, '').replace(/\s+/g, '');
+    var email = String(cell(row, 'email address') || '').trim();
+    var ownership = String(cell(row, 'home ownership') || '');
+    if (!phone || !email || ownership === 'Rent') { skipped++; return; }
+
+    var when = cell(row, 'date');
+    var date = when instanceof Date ? when : Utilities.parseDate(String(when), TIMEZONE, DATE_FORMAT);
+    // The sheet's Date is to the minute; a minute's grace keeps a lead that
+    // arrived while crmSetup was running on the live side, not both.
+    if (!date || isNaN(date.getTime()) || date.getTime() >= liveSince - 60 * 1000) { skipped++; return; }
+
+    var digest = Utilities.computeDigest(
+      Utilities.DigestAlgorithm.SHA_256,
+      [date.toISOString(), phone, email.toLowerCase()].join('|'),
+      Utilities.Charset.UTF_8
+    ).map(function (b) { return ('0' + (b & 0xff).toString(16)).slice(-2); }).join('');
+    var eventId = 'sheet-' + digest.slice(0, 32);
+    if (known[eventId]) { skipped++; return; }
+
+    var name = String(cell(row, 'name') || '').trim().split(/\s+/);
+    var parts = String(cell(row, 'property address') || '').split(',').map(function (p) { return p.trim(); });
+    var postcode = parts.length > 1 && /^\d{4}$/.test(parts[parts.length - 1]) ? parts.pop() : '';
+    var suburb = parts.length > 1 ? parts.pop() : '';
+
+    var data = {
+      event_id: eventId,
+      submitted_at: date.toISOString(),
+      lead_type: 'residential solar',
+      backfilled_from_sheet: 'Yes',
+      first_name: name.shift() || '',
+      last_name: name.join(' '),
+      email_address: email,
+      phone_number: phone,
+      street_address: parts.join(', '),
+      suburb_city: suburb,
+      postcode: postcode,
+      homeowner: ownership,
+      product_type: String(cell(row, 'energy system') || ''),
+      existing_solar: String(cell(row, 'existing solar') || ''),
+      existing_solar_age: String(cell(row, 'solar age') || ''),
+      roof_type: String(cell(row, 'roof type') || ''),
+      home_age: String(cell(row, 'home age') || ''),
+      shading_issues: String(cell(row, 'roof shade') || ''),
+      bill_size: String(cell(row, 'bill range - quarterly') || ''),
+      // Blank on any row written before the OTP build, which is most of them.
+      otp_verified: String(cell(row, 'phone verified') || '')
+    };
+    crmEnqueue_(data);
+    known[eventId] = true;
+    queued++;
+  });
+  Logger.log('Backfill: queued ' + queued + ', skipped ' + skipped + '. crmFlush sends them over the next minutes.');
 }
