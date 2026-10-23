@@ -20,13 +20,15 @@
  *   Roof Type | Home Age | Roof Shade | Bill range - quarterly |
  *   Landload Name | Landload Phone
  *
- * Two more columns, "Phone verified" and "Click ID", are appended
- * automatically the first time this build runs. The 15 above are not touched,
+ * Three more columns, "Phone verified", "Click ID" and "Ad Name", are appended
+ * automatically when the sheet has none for them. The 15 above are not touched,
  * reordered or renamed. Rows are written against the sheet's own header row,
  * so columns can be moved in the sheet without editing this file.
  *
  * Click ID is the ClickFlare click id the tracker puts on the landing URL as
  * ?p1=<cf_click_id>. It matches a lead back to the ad click that produced it.
+ * Ad Name is Meta's {{ad.name}}, which ClickFlare passes on as
+ * ?p2={trackingField4}.
  *
  * Two more tabs appear on their own: "CRM outbox" and "OTP Log".
  *
@@ -68,7 +70,7 @@
  *   Deploy -> Manage deployments -> ✏️ edit -> Version: **New version** -> Deploy
  *
  * Then confirm in a PRIVATE window with <url>?ping=1. All four must be true:
- *   "build":"otp-crm-clickid-2026-09-30"   — this file, actually serving
+ *   "build":"otp-crm-adname-2026-10-23"   — this file, actually serving
  *   "otp":"configured"             — the three TWILIO_* properties are set
  *   "crm":{"configured":true,"trigger":true}
  *   "unmapped":[]                  — every sheet header has a value behind it
@@ -79,7 +81,7 @@
  */
 
 /** Bump with every edit. ?ping=1 reports it; js/diagnostics.js compares it. */
-var SCRIPT_BUILD = 'otp-crm-clickid-2026-09-30';
+var SCRIPT_BUILD = 'otp-crm-adname-2026-10-23';
 
 /* ------------------------------------------------------------------ */
 /* Configuration — sheet                                               */
@@ -405,6 +407,10 @@ function buildRow(d) {
     // as clid; the other two spellings cover a caller posting it directly.
     'click id': formatClickId(d.clid || d.click_id || d.p1),
 
+    // Meta's ad name, from ?p2= on the landing URL. The form sends it as
+    // ad_name; p2 covers a caller posting it directly.
+    'ad name': formatAdName(d.ad_name || d.p2),
+
     // Fills the single "solar" column on a sheet still using the old
     // 9-column layout. Harmless on the current one, which has no such header.
     'solar': existingSolar && solarAge
@@ -431,6 +437,18 @@ function formatPhone(phone) {
 function formatClickId(id) {
   var v = String(id || '').trim();
   return /^[A-Za-z0-9._-]{1,100}$/.test(v) ? "'" + v : '';
+}
+
+/**
+ * An ad name is free text, so it is tidied rather than held to a pattern:
+ * whitespace collapsed, capped at 200 characters, and dropped only when it is
+ * an unreplaced macro such as "{trackingField4}" or "{{ad.name}}". The
+ * leading apostrophe stops a name starting with "=" or "+" being read as a
+ * formula, since this endpoint is public.
+ */
+function formatAdName(name) {
+  var v = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+  return v && !/\{[^}]*\}/.test(v) ? "'" + v : '';
 }
 
 /* ------------------------------------------------------------------ */
@@ -512,6 +530,12 @@ var HEADER_ALIASES = {
   'cf_click_id': 'click id',
   'clickflare click id': 'click id',
 
+  'p2': 'ad name',
+  'ad': 'ad name',
+  'adname': 'ad name',
+  'ad_name': 'ad name',
+  'meta ad name': 'ad name',
+
   'bill range': 'bill range - quarterly',
   'bill range quarterly': 'bill range - quarterly',
   'bill size': 'bill range - quarterly',
@@ -565,7 +589,8 @@ function getSheet() {
  */
 var AUTO_COLUMNS = [
   ['phone verified', 'Phone verified'],
-  ['click id', 'Click ID']
+  ['click id', 'Click ID'],
+  ['ad name', 'Ad Name']
 ];
 
 /**
@@ -582,8 +607,8 @@ function ensureHeaders(sheet) {
     headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
   }
 
-  // The verification outcome and the click id need somewhere to go. Any that
-  // has no column is added at the END — the 15 existing columns are
+  // The verification outcome, the click id and the ad name need somewhere to
+  // go. Any that has no column is added at the END — the 15 existing columns are
   // untouched, and nothing else in this file depends on the count.
   AUTO_COLUMNS.forEach(function (c) {
     var present = headers.some(function (h) { return columnKey(h) === c[0]; });
@@ -1874,7 +1899,8 @@ function testInsert() {
     home_age: '10 - 20 Years',
     shading_issues: 'No Shading Issues',
     bill_size: '$600 - $900',
-    clid: 'f919bbfb-bb6e-440a-aa5e-76c084c0ea32'
+    clid: 'f919bbfb-bb6e-440a-aa5e-76c084c0ea32',
+    ad_name: 'Test Ad - Solar Rebate'
   });
 }
 
