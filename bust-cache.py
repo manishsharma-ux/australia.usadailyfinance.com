@@ -12,6 +12,7 @@ refetched on the next visit.
     python3 bust-cache.py --check      # show what would change, write nothing
     python3 bust-cache.py --version 7  # use one literal stamp for everything
     python3 bust-cache.py page.html    # only these files
+    python3 bust-cache.py --site solar2   # another funnel folder (default solar1)
 
 IMPORTANT — this only works if the HTML itself is not cached. If the browser
 serves index.html from its own cache it never sees the new stamps. Ship the
@@ -130,8 +131,11 @@ def main():
     ap = argparse.ArgumentParser(
         description='Re-stamp ?v= cache keys on local CSS and JS.')
     ap.add_argument('files', nargs='*',
-                    help='HTML files to rewrite (default: *.html in solar1/, '
-                         'excluding *.backup.html)')
+                    help='HTML files to rewrite (default: *.html in the site '
+                         'folder, excluding *.backup.html)')
+    ap.add_argument('--site', default='solar1', metavar='FOLDER',
+                    help='funnel folder to stamp, served at /FOLDER/ '
+                         '(default: solar1)')
     ap.add_argument('--check', action='store_true',
                     help='report what would change and write nothing')
     ap.add_argument('--version', metavar='STAMP',
@@ -139,8 +143,12 @@ def main():
                          'a per-file content hash')
     args = ap.parse_args()
 
-    # The site lives in solar1/ so it deploys to /solar1/ on the domain.
-    root = pathlib.Path(__file__).resolve().parent / 'solar1'
+    # Each funnel lives in its own folder, solar1/ deploying to /solar1/ on
+    # the domain, solar2/ to /solar2/, and so on.
+    root = pathlib.Path(__file__).resolve().parent / args.site
+    if not root.is_dir():
+        print('No folder %s/ next to this script.' % args.site, file=sys.stderr)
+        return 1
 
     if args.files:
         targets = [pathlib.Path(f).resolve() for f in args.files]
