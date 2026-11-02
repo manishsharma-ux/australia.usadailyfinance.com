@@ -87,6 +87,13 @@
 /** Bump with every edit. ?ping=1 reports it; js/diagnostics.js compares it. */
 var SCRIPT_BUILD = 'otp-crm-adname-2026-10-23';
 
+/**
+ * Which sheet columns this code recognises. ?ping=1 reports it as columns_build,
+ * so a deploy can be checked from outside. Separate from SCRIPT_BUILD, which
+ * the website's own files are checked against.
+ */
+var COLUMNS_BUILD = 'sydney-est-2026-11-02';
+
 /* ------------------------------------------------------------------ */
 /* Configuration — sheet                                               */
 /* ------------------------------------------------------------------ */
@@ -246,6 +253,7 @@ function handlePing() {
     ok: true,
     pong: true,
     build: SCRIPT_BUILD,
+    columns_build: COLUMNS_BUILD,
     sheet_id: SHEET_ID,
     otp: twilio.ok ? 'configured' : 'not_configured',
     otp_error: twilio.ok ? null : twilio.error,
@@ -654,60 +662,92 @@ function ensureHeaders(sheet) {
 }
 
 /**
- * One-off: fills "EST Time Zone" on rows written before that column existed.
- * Run it from the Apps Script editor (pick backfillEstDates, press Run).
- * Rows that already have a value are left alone, so a second run is harmless.
+ * Fills a blank Sydney date or a blank EST date from the other one, on every
+ * row. Run it from the Apps Script editor (pick backfillTimeZones, press Run).
+ * Cells that already hold a value are left alone, so a second run is harmless.
  *
- * Each row's Date is read as Sydney time, which is what buildRow writes, and
- * converted to New York time. A Date cell Sheets has turned into a real date
- * is first read back as the wall-clock text the sheet shows, so the
- * spreadsheet's own timezone setting cannot shift it.
+ * It covers rows written before the EST column existed, and rows written while
+ * the sheet's headers were ahead of the deployed script: a header the old
+ * script did not recognise was left blank. A row with both dates blank has
+ * nothing to work from and is listed in the log.
+ *
+ * A cell Sheets has turned into a real date is read back as the wall-clock
+ * text the sheet shows, so the spreadsheet's own timezone setting cannot
+ * shift it.
  */
-function backfillEstDates() {
+function backfillTimeZones() {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
     var sheet   = getSheet();
-    var headers = ensureHeaders(sheet);   // adds the column if it is missing
+    var headers = ensureHeaders(sheet);   // adds the EST column if it is missing
     var keys    = headers.map(columnKey);
-    var dateCol = keys.indexOf('date');
+    var sydCol  = keys.indexOf('date');
     var estCol  = keys.indexOf('date (est)');
     var last    = sheet.getLastRow();
-    if (dateCol === -1 || last < 2) {
+    if (sydCol === -1) {
+      Logger.log('No Sydney date column. Headers: ' + headers.join(' | '));
+      return;
+    }
+    if (last < 2) {
       Logger.log('Nothing to backfill.');
       return;
     }
 
-    var sheetTz = getSpreadsheet().getSpreadsheetTimeZone();
-    var dates   = sheet.getRange(2, dateCol + 1, last - 1, 1).getValues();
-    var range   = sheet.getRange(2, estCol + 1, last - 1, 1);
-    var est     = range.getValues();
-    var filled = 0, unreadable = 0;
+    var sheetTz  = getSpreadsheet().getSpreadsheetTimeZone();
+    var rows     = sheet.getRange(2, 1, last - 1, headers.length).getValues();
+    var sydRange = sheet.getRange(2, sydCol + 1, last - 1, 1);
+    var estRange = sheet.getRange(2, estCol + 1, last - 1, 1);
+    var syd = sydRange.getValues();
+    var est = estRange.getValues();
+    var toSyd = 0, toEst = 0, bothBlank = [], unreadable = [];
 
-    for (var i = 0; i < dates.length; i++) {
-      if (String(est[i][0]).trim()) continue;
-      var when = dates[i][0];
-      var text = when instanceof Date
-        ? Utilities.formatDate(when, sheetTz, DATE_FORMAT)
-        : String(when || '').trim();
-      if (!text) continue;
+    // A cell's value as a Date, reading it as wall-clock time in tz.
+    function read(value, tz) {
+      var text = value instanceof Date
+        ? Utilities.formatDate(value, sheetTz, DATE_FORMAT)
+        : String(value).trim();
+      var d = Utilities.parseDate(text, tz, DATE_FORMAT);
+      if (!d || isNaN(d.getTime())) throw new Error('bad date');
+      return d;
+    }
+
+    for (var i = 0; i < rows.length; i++) {
+      var hasSyd = String(syd[i][0]).trim() !== '';
+      var hasEst = String(est[i][0]).trim() !== '';
+      if (hasSyd && hasEst) continue;
+      if (!hasSyd && !hasEst) {
+        var used = rows[i].some(function (v) { return String(v).trim() !== ''; });
+        if (used) bothBlank.push(i + 2);
+        continue;
+      }
       try {
-        var date = Utilities.parseDate(text, TIMEZONE, DATE_FORMAT);
-        if (isNaN(date.getTime())) throw new Error('bad date');
-        est[i][0] = Utilities.formatDate(date, EST_TIMEZONE, DATE_FORMAT);
-        filled++;
+        if (hasSyd) {
+          est[i][0] = Utilities.formatDate(read(syd[i][0], TIMEZONE), EST_TIMEZONE, DATE_FORMAT);
+          toEst++;
+        } else {
+          syd[i][0] = Utilities.formatDate(read(est[i][0], EST_TIMEZONE), TIMEZONE, DATE_FORMAT);
+          toSyd++;
+        }
       } catch (err) {
-        unreadable++;
-        Logger.log('Row ' + (i + 2) + ': could not read Date "' + text + '"');
+        unreadable.push(i + 2);
       }
     }
 
-    range.setValues(est);
-    Logger.log('EST Time Zone filled on ' + filled + ' row(s); ' +
-               unreadable + ' row(s) had a Date that could not be read.');
+    if (toSyd) sydRange.setValues(syd);
+    if (toEst) estRange.setValues(est);
+    Logger.log('"' + headers[sydCol] + '" filled on ' + toSyd + ' row(s); "' +
+               headers[estCol] + '" filled on ' + toEst + ' row(s).');
+    if (unreadable.length) Logger.log('Could not read the date on rows: ' + unreadable.join(', '));
+    if (bothBlank.length)  Logger.log('Both dates blank, nothing to fill from, on rows: ' + bothBlank.join(', '));
   } finally {
     lock.releaseLock();
   }
+}
+
+/** Earlier name for backfillTimeZones, kept so either one can be run. */
+function backfillEstDates() {
+  backfillTimeZones();
 }
 
 /* ------------------------------------------------------------------ */
