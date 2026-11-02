@@ -18,17 +18,19 @@
  *   Date | Name | Phone number | Property address | Email address |
  *   Home Ownership | Energy System | Existing Solar | Solar Age |
  *   Roof Type | Home Age | Roof Shade | Bill range - quarterly |
- *   Landload Name | Landload Phone
+ *   Landload Name | Landload Phone | Phone verified | P1 | Ad Name |
+ *   EST Time Zone
  *
- * Three more columns, "Phone verified", "Click ID" and "Ad Name", are appended
- * automatically when the sheet has none for them. The 15 above are not touched,
- * reordered or renamed. Rows are written against the sheet's own header row,
+ * The last four are appended automatically when the sheet has none for
+ * them. Columns already there are not touched, reordered or renamed. Rows are written against the sheet's own header row,
  * so columns can be moved in the sheet without editing this file.
  *
- * Click ID is the ClickFlare click id the tracker puts on the landing URL as
+ * P1 is the ClickFlare click id the tracker puts on the landing URL as
  * ?p1=<cf_click_id>. It matches a lead back to the ad click that produced it.
  * Ad Name is Meta's {{ad.name}}, which ClickFlare passes on as
  * ?p2={trackingField4}.
+ * EST Time Zone is the Date again in New York time, so a lead lands on the
+ * same day Meta reports it; see EST_TIMEZONE.
  *
  * Two more tabs appear on their own: "CRM outbox" and "OTP Log".
  *
@@ -90,7 +92,7 @@ var SCRIPT_BUILD = 'otp-crm-adname-2026-10-23';
 var SHEET_ID    = '1jSAombFpIwvjqH0JWJmidKC5U50nDYxVaiDQgEzWkbo';
 var SHEET_NAME  = 'Sheet1';            // falls back to the first tab if absent
 var TIMEZONE    = 'Australia/Sydney';  // timezone the Date column is written in
-// Timezone of the "Date (EST)" column. Matches a Meta ad account set to
+// Timezone of the "EST Time Zone" column. Matches a Meta ad account set to
 // Eastern Time (America/New_York), so it follows US daylight saving the same
 // way Ads Manager does: EST (UTC-5) in winter, EDT (UTC-4) in summer.
 var EST_TIMEZONE = 'America/New_York';
@@ -112,7 +114,11 @@ var HEADERS = [
   'Roof Shade',
   'Bill range - quarterly',
   'Landload Name',
-  'Landload Phone'
+  'Landload Phone',
+  'Phone verified',
+  'P1',
+  'Ad Name',
+  'EST Time Zone'
 ];
 
 /* ------------------------------------------------------------------ */
@@ -542,6 +548,15 @@ var HEADER_ALIASES = {
   'ad_name': 'ad name',
   'meta ad name': 'ad name',
 
+  // The Date again in New York time (EST_TIMEZONE).
+  'est time zone': 'date (est)',
+  'est timezone': 'date (est)',
+  'est': 'date (est)',
+  'est time': 'date (est)',
+  'est date': 'date (est)',
+  'date est': 'date (est)',
+  'eastern time': 'date (est)',
+
   'bill range': 'bill range - quarterly',
   'bill range quarterly': 'bill range - quarterly',
   'bill size': 'bill range - quarterly',
@@ -595,9 +610,9 @@ function getSheet() {
  */
 var AUTO_COLUMNS = [
   ['phone verified', 'Phone verified'],
-  ['click id', 'Click ID'],
+  ['click id', 'P1'],
   ['ad name', 'Ad Name'],
-  ['date (est)', 'Date (EST)']
+  ['date (est)', 'EST Time Zone']
 ];
 
 /**
@@ -615,7 +630,7 @@ function ensureHeaders(sheet) {
   }
 
   // The verification outcome, the click id, the ad name and the EST date need somewhere to
-  // go. Any that has no column is added at the END — the 15 existing columns are
+  // go. Any that has no column is added at the END — the existing columns are
   // untouched, and nothing else in this file depends on the count.
   AUTO_COLUMNS.forEach(function (c) {
     var present = headers.some(function (h) { return columnKey(h) === c[0]; });
@@ -628,7 +643,7 @@ function ensureHeaders(sheet) {
 }
 
 /**
- * One-off: fills "Date (EST)" on rows written before that column existed.
+ * One-off: fills "EST Time Zone" on rows written before that column existed.
  * Run it from the Apps Script editor (pick backfillEstDates, press Run).
  * Rows that already have a value are left alone, so a second run is harmless.
  *
@@ -677,7 +692,7 @@ function backfillEstDates() {
     }
 
     range.setValues(est);
-    Logger.log('Date (EST) filled on ' + filled + ' row(s); ' +
+    Logger.log('EST Time Zone filled on ' + filled + ' row(s); ' +
                unreadable + ' row(s) had a Date that could not be read.');
   } finally {
     lock.releaseLock();

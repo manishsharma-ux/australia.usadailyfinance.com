@@ -118,7 +118,7 @@ var SCRIPT_BUILD = 'solar2-otp-crm-2026-10-23';
 var SHEET_ID    = '16e2zl4ZDj1Vi164R9EWjwPiyXj6St_aWLot2KAibfNo';
 var SHEET_NAME  = 'Sheet1';            // falls back to the first tab if absent
 var TIMEZONE    = 'Australia/Sydney';  // timezone the Date column is written in
-// Timezone of the "Date (EST)" column. Matches a Meta ad account set to
+// Timezone of the "EST Time Zone" column. Matches a Meta ad account set to
 // Eastern Time (America/New_York), so it follows US daylight saving the same
 // way Ads Manager does: EST (UTC-5) in winter, EDT (UTC-4) in summer.
 var EST_TIMEZONE = 'America/New_York';
@@ -554,6 +554,15 @@ var HEADER_ALIASES = {
   'ad_name': 'ad name',
   'meta ad name': 'ad name',
 
+  // The Date again in New York time (EST_TIMEZONE).
+  'est time zone': 'date (est)',
+  'est timezone': 'date (est)',
+  'est': 'date (est)',
+  'est time': 'date (est)',
+  'est date': 'date (est)',
+  'date est': 'date (est)',
+  'eastern time': 'date (est)',
+
   'bill range': 'bill range - quarterly',
   'bill range quarterly': 'bill range - quarterly',
   'bill size': 'bill range - quarterly',
@@ -607,9 +616,9 @@ function getSheet() {
  */
 var AUTO_COLUMNS = [
   ['phone verified', 'Phone verified'],
-  ['click id', 'Click ID'],
+  ['click id', 'P1'],
   ['ad name', 'Ad Name'],
-  ['date (est)', 'Date (EST)']
+  ['date (est)', 'EST Time Zone']
 ];
 
 /**
@@ -640,7 +649,7 @@ function ensureHeaders(sheet) {
 }
 
 /**
- * One-off: fills "Date (EST)" on rows written before that column existed.
+ * One-off: fills "EST Time Zone" on rows written before that column existed.
  * Run it from the Apps Script editor (pick backfillEstDates, press Run).
  * Rows that already have a value are left alone, so a second run is harmless.
  *
@@ -689,7 +698,7 @@ function backfillEstDates() {
     }
 
     range.setValues(est);
-    Logger.log('Date (EST) filled on ' + filled + ' row(s); ' +
+    Logger.log('EST Time Zone filled on ' + filled + ' row(s); ' +
                unreadable + ' row(s) had a Date that could not be read.');
   } finally {
     lock.releaseLock();
