@@ -13,16 +13,18 @@
  * token round-trip between them and so nothing to lose in the gap.
  *
  * ---------------------------------------------------------------------------
- * SHEET  (unchanged — the 15 columns are exactly as specified)
+ * SHEET  (columns are matched by header text, not position)
  * ---------------------------------------------------------------------------
- *   Date | Name | Phone number | Property address | Email address |
- *   Home Ownership | Energy System | Existing Solar | Solar Age |
- *   Roof Type | Home Age | Roof Shade | Bill range - quarterly |
- *   Landload Name | Landload Phone | Phone verified | P1 | Ad Name |
- *   EST Time Zone
+ *   Sydney Time Zone | EST Time Zone | Name | Phone number |
+ *   Property address | Email address | Home Ownership | Energy System |
+ *   Existing Solar | Solar Age | Roof Type | Home Age | Roof Shade |
+ *   Bill range - quarterly | Landload Name | Landload Phone |
+ *   Phone verified | P1 | Ad Name
  *
- * The last four are appended automatically when the sheet has none for
- * them. Columns already there are not touched, reordered or renamed. Rows are written against the sheet's own header row,
+ * Sydney Time Zone is the lead's time in TIMEZONE; older sheets call it
+ * "Date". Phone verified, P1, Ad Name and EST Time Zone are appended
+ * automatically when the sheet has none for them. Columns already there are
+ * not touched, reordered or renamed. Rows are written against the sheet's own header row,
  * so columns can be moved in the sheet without editing this file.
  *
  * P1 is the ClickFlare click id the tracker puts on the landing URL as
@@ -100,7 +102,8 @@ var DATE_FORMAT = 'dd/MM/yyyy HH:mm';
 
 /** Exact header text, in order. Written only to a sheet that has no header row. */
 var HEADERS = [
-  'Date',
+  'Sydney Time Zone',
+  'EST Time Zone',
   'Name',
   'Phone number',
   'Property address',
@@ -117,8 +120,7 @@ var HEADERS = [
   'Landload Phone',
   'Phone verified',
   'P1',
-  'Ad Name',
-  'EST Time Zone'
+  'Ad Name'
 ];
 
 /* ------------------------------------------------------------------ */
@@ -481,6 +483,15 @@ function normalise(header) {
  * A header that already matches a buildRow key needs no entry.
  */
 var HEADER_ALIASES = {
+  // The lead's time in TIMEZONE (Sydney).
+  'sydney time zone': 'date',
+  'sydney timezone': 'date',
+  'sydney time': 'date',
+  'sydney date': 'date',
+  'date (sydney)': 'date',
+  'aest': 'date',
+  'aedt': 'date',
+
   'phone': 'phone number',
   'mobile': 'phone number',
   'mobile number': 'phone number',

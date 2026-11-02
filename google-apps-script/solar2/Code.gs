@@ -496,6 +496,15 @@ function normalise(header) {
  * A header that already matches a buildRow key needs no entry.
  */
 var HEADER_ALIASES = {
+  // The lead's time in TIMEZONE (Sydney).
+  'sydney time zone': 'date',
+  'sydney timezone': 'date',
+  'sydney time': 'date',
+  'sydney date': 'date',
+  'date (sydney)': 'date',
+  'aest': 'date',
+  'aedt': 'date',
+
   'phone': 'phone number',
   'mobile': 'phone number',
   'mobile number': 'phone number',
