@@ -118,6 +118,10 @@ var SCRIPT_BUILD = 'solar2-otp-crm-2026-10-23';
 var SHEET_ID    = '16e2zl4ZDj1Vi164R9EWjwPiyXj6St_aWLot2KAibfNo';
 var SHEET_NAME  = 'Sheet1';            // falls back to the first tab if absent
 var TIMEZONE    = 'Australia/Sydney';  // timezone the Date column is written in
+// Timezone of the "Date (EST)" column. Matches a Meta ad account set to
+// Eastern Time (America/New_York), so it follows US daylight saving the same
+// way Ads Manager does: EST (UTC-5) in winter, EDT (UTC-4) in summer.
+var EST_TIMEZONE = 'America/New_York';
 var DATE_FORMAT = 'dd/MM/yyyy HH:mm';
 
 /** Exact header text, in order. Written only to a sheet that has no header row. */
@@ -386,6 +390,7 @@ function handleLead(data, opts) {
 /** Maps the form payload onto the columns. Keys are normalised headers. */
 function buildRow(d) {
   d = d || {};
+  var now = new Date();   // one instant, so both date columns agree
 
   var name = [d.first_name, d.last_name]
     .filter(function (p) { return p && String(p).trim(); })
@@ -407,7 +412,8 @@ function buildRow(d) {
   var solarAge      = d.existing_solar_age || '';
 
   return {
-    'date': Utilities.formatDate(new Date(), TIMEZONE, DATE_FORMAT),
+    'date': Utilities.formatDate(now, TIMEZONE, DATE_FORMAT),
+    'date (est)': Utilities.formatDate(now, EST_TIMEZONE, DATE_FORMAT),
     'name': name || d.name || '',
     'phone number': formatPhone(d.phone_number),
     'property address': address || d.property_address || '',
@@ -602,7 +608,8 @@ function getSheet() {
 var AUTO_COLUMNS = [
   ['phone verified', 'Phone verified'],
   ['click id', 'Click ID'],
-  ['ad name', 'Ad Name']
+  ['ad name', 'Ad Name'],
+  ['date (est)', 'Date (EST)']
 ];
 
 /**
@@ -619,7 +626,7 @@ function ensureHeaders(sheet) {
     headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
   }
 
-  // The verification outcome, the click id and the ad name need somewhere to
+  // The verification outcome, the click id, the ad name and the EST date need somewhere to
   // go. Any that has no column is added at the END — the existing columns are
   // untouched, and nothing else in this file depends on the count.
   AUTO_COLUMNS.forEach(function (c) {
@@ -630,6 +637,63 @@ function ensureHeaders(sheet) {
     }
   });
   return headers;
+}
+
+/**
+ * One-off: fills "Date (EST)" on rows written before that column existed.
+ * Run it from the Apps Script editor (pick backfillEstDates, press Run).
+ * Rows that already have a value are left alone, so a second run is harmless.
+ *
+ * Each row's Date is read as Sydney time, which is what buildRow writes, and
+ * converted to New York time. A Date cell Sheets has turned into a real date
+ * is first read back as the wall-clock text the sheet shows, so the
+ * spreadsheet's own timezone setting cannot shift it.
+ */
+function backfillEstDates() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var sheet   = getSheet();
+    var headers = ensureHeaders(sheet);   // adds the column if it is missing
+    var keys    = headers.map(columnKey);
+    var dateCol = keys.indexOf('date');
+    var estCol  = keys.indexOf('date (est)');
+    var last    = sheet.getLastRow();
+    if (dateCol === -1 || last < 2) {
+      Logger.log('Nothing to backfill.');
+      return;
+    }
+
+    var sheetTz = getSpreadsheet().getSpreadsheetTimeZone();
+    var dates   = sheet.getRange(2, dateCol + 1, last - 1, 1).getValues();
+    var range   = sheet.getRange(2, estCol + 1, last - 1, 1);
+    var est     = range.getValues();
+    var filled = 0, unreadable = 0;
+
+    for (var i = 0; i < dates.length; i++) {
+      if (String(est[i][0]).trim()) continue;
+      var when = dates[i][0];
+      var text = when instanceof Date
+        ? Utilities.formatDate(when, sheetTz, DATE_FORMAT)
+        : String(when || '').trim();
+      if (!text) continue;
+      try {
+        var date = Utilities.parseDate(text, TIMEZONE, DATE_FORMAT);
+        if (isNaN(date.getTime())) throw new Error('bad date');
+        est[i][0] = Utilities.formatDate(date, EST_TIMEZONE, DATE_FORMAT);
+        filled++;
+      } catch (err) {
+        unreadable++;
+        Logger.log('Row ' + (i + 2) + ': could not read Date "' + text + '"');
+      }
+    }
+
+    range.setValues(est);
+    Logger.log('Date (EST) filled on ' + filled + ' row(s); ' +
+               unreadable + ' row(s) had a Date that could not be read.');
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 /* ------------------------------------------------------------------ */
